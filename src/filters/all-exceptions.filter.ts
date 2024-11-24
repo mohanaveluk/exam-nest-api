@@ -32,6 +32,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       
     response.status(status).json({
       statusCode: status,
+      message: typeof message === 'object' && message !== null && 'message' in message ? (Array.isArray(message?.message) ? message?.message[0]: message?.message) : 'Something went wrong',
       timestamp: new Date().toISOString(),
       path: request.url,
     });

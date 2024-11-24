@@ -3,7 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { InjectRepository } from '@nestjs/typeorm';
 import { use } from 'passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { Role } from 'src/auth/enums/role.enum';
 import { User } from 'src/models/user.entity';
 import { Repository } from 'typeorm';
 
@@ -35,7 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: user.email,
       firstName: user.first_name,
       lastName: user.last_name,
-      role: user.roleGuid
+      //role: user.role_guid
     };
   }
 }

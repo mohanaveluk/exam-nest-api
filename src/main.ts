@@ -4,12 +4,20 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { CorsUtil } from './shared/utils/cors.util';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // Set global prefix for all routes
+  app.setGlobalPrefix('api/v1');
+  
   app.useGlobalPipes(new ValidationPipe());
   //app.useGlobalGuards(new JwtAuthGuard(app.get(JwtService), app.get(Reflector)));
   //app.useGlobalGuards(new JwtAuthGuard(app.get(Reflector)));
+
+  // cors
+  app.enableCors(CorsUtil());
+
   // Only enable Swagger in development mode
   if (process.env.NODE_ENV === 'development') {
     const config = new DocumentBuilder()
@@ -31,6 +39,6 @@ async function bootstrap() {
     SwaggerModule.setup('api-docs', app, document);
   }
 
-  await app.listen(3000);
+  await app.listen(process.env.PORT || 3000);
 }
 bootstrap();

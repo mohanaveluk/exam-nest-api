@@ -10,11 +10,13 @@ import { PasswordArchive } from 'src/models/password-archive.entity';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import * as dotenv from 'dotenv';
 import { AuthorizationGuard } from 'src/guards/jwt-authorization.guard';
+import { DateService } from 'src/services/date.service';
+import { RoleEntity } from 'src/models/roles.entity';
 dotenv.config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PasswordArchive]),
+    TypeOrmModule.forFeature([User, PasswordArchive, RoleEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' ,
       session: false}),
     
@@ -42,6 +44,7 @@ dotenv.config();
     JwtStrategy,
     JwtAuthGuard,
     AuthorizationGuard,
+    DateService
     // {
     //   provide: APP_GUARD,
     //   useClass: JwtAuthGuard,
@@ -54,6 +57,6 @@ dotenv.config();
       inject: [Reflector, JwtService]
     }*/
   ],
-  exports: [AuthService,  PassportModule],
+  exports: [AuthService,  PassportModule, DateService],
 })
 export class AuthModule { }

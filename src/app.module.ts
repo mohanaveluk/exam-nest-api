@@ -22,6 +22,10 @@ import { LogModule } from './modules/log.module';
       database: process.env.DB_DATABASE || 'exam_db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      logging: false,
+      logger: 'simple-console',
+      migrationsRun: true,
+      migrations: [__dirname + '/database/migrations/**/*.{ts,js}'],
     }),
     //TypeOrmModule.forFeature([LogRepository]),
     AuthModule,
@@ -42,7 +46,7 @@ export class AppModule implements OnModuleInit {
   constructor(private readonly rolesService: RolesService) {}
 
   async onModuleInit() {
-    await this.rolesService.createInitialRoles();
+    //await this.rolesService.createInitialRoles();
   }
 
 }

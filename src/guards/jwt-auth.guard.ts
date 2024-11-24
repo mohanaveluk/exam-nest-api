@@ -4,6 +4,7 @@ import { JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from 'src/auth/decorators/public.decorator';
+import { Constants } from 'src/shared/constants/constants';
 
 
 @Injectable()
@@ -38,10 +39,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       console.log(payload);
       request['user'] = payload;
     } catch(error) {
-      if (error?.name === 'TokenExpiredError') {
-        throw new UnauthorizedException('Token has expired');
+      if (error?.name === Constants.EXCEPTION.TOKEN_EXPIRED_ERROR) {
+        throw new UnauthorizedException(Constants.AUTH.TOKEN_EXPIRED);
       }
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException(Constants.AUTH.UN_AUTHORIZED);
     }
     return (await super.canActivate(context)) as boolean;
     //return true;
