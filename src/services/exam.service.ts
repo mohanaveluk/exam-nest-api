@@ -7,6 +7,7 @@ import { Option } from '../models/exam/option.entity';
 import { CreateExamDto } from '../dto/exam/create-exam.dto';
 import { UpdateExamDto } from '../dto/exam/update-exam.dto';
 import { UpdateQuestionDto } from '../dto/exam/update-question.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ExamService {
@@ -48,6 +49,8 @@ export class ExamService {
     }
 
     const exam = new Exam();
+    exam.id = uuidv4().replace(/-/g, "");
+    exam.sid = await this.examRepository.count() + 1;
     exam.title = createExamDto.title;
     exam.description = createExamDto.description;
     exam.category = createExamDto.category;

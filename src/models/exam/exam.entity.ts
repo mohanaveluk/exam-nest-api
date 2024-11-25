@@ -1,10 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ValueTransformer, PrimaryColumn } from 'typeorm';
 import { Question } from './question.entity';
+
+const removeDashes: ValueTransformer = {
+  from: (str: string | null | undefined) => str != null ? str.replace(/-/g, "") : str,
+  to: (str: string | null | undefined) => str != null ? str.replace(/-/g, "") : str,
+};
+
 
 @Entity('exam_tbl')
 export class Exam {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  sid: number;
 
   @Column({type: 'text'})
   title: string;
