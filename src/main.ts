@@ -11,7 +11,7 @@ async function bootstrap() {
   // Set global prefix for all routes
   app.setGlobalPrefix('api/v1');
   
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({ transform: true }));
   //app.useGlobalGuards(new JwtAuthGuard(app.get(JwtService), app.get(Reflector)));
   //app.useGlobalGuards(new JwtAuthGuard(app.get(Reflector)));
 

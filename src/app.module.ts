@@ -9,6 +9,7 @@ import { RolesModule } from './modules/roles.module';
 import { RolesService } from './services/roles.service';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { LogModule } from './modules/log.module';
+import { ExamModule } from './modules/exam.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { LogModule } from './modules/log.module';
     RolesModule,
     ContactModule,
     EmailModule,
-    LogModule
+    LogModule,
+    ExamModule
   ],
   providers: [
     //CustomLoggerService,
