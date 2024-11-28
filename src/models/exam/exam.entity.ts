@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ValueTransformer, PrimaryColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ValueTransformer, PrimaryColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Question } from './question.entity';
+import { Category } from './category.entity';
 
 const removeDashes: ValueTransformer = {
   from: (str: string | null | undefined) => str != null ? str.replace(/-/g, "") : str,
@@ -21,14 +22,18 @@ export class Exam {
   @Column({type: 'text'})
   description: string;
 
-  @Column()
-  category: string;
+  @ManyToOne(() => Category, category => category.exams)
+  @JoinColumn({ name: 'category_id' })
+  category: Category;
 
   @Column({type: 'text'})
   notes: string;
 
   @Column({name: 'created_at'})
   createdAt: Date;
+
+  @Column({name: 'updated_at', nullable: true})
+  updatedAt: Date;
 
   @Column()
   duration: number;

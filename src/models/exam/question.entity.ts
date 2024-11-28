@@ -23,6 +23,9 @@ export class Question {
   @Column('simple-array', { nullable: true })
   order: number[];
 
+  @Column({length:100})
+  qguid: string;
+  
   @ManyToOne(() => Exam, exam => exam.questions)
   @JoinColumn({ name: 'exam_id' })
   @Exclude()

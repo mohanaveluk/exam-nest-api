@@ -27,6 +27,7 @@ import { ExamModule } from './modules/exam.module';
       logger: 'simple-console',
       migrationsRun: true,
       migrations: [__dirname + '/database/migrations/**/*.{ts,js}'],
+      connectTimeout: 60000, // 60 seconds
     }),
     //TypeOrmModule.forFeature([LogRepository]),
     AuthModule,

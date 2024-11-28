@@ -1,4 +1,4 @@
-import { IsString, IsArray, IsOptional, ValidateNested, IsEnum, IsNumber } from 'class-validator';
+import { IsString, IsArray, IsOptional, ValidateNested, IsEnum, IsNumber, IsDate } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { QuestionType } from './create-exam.dto';
 
@@ -49,4 +49,12 @@ export class UpdateQuestionDto {
   @IsNumber({}, { each: true })
   @IsOptional()
   order?: number[];
+
+
+  @ApiProperty({
+    description: 'The unique uuid text',
+    example: '37035365c1794859b7dce39e64025c53'
+  })
+  @IsString()
+  qguid: string
 }

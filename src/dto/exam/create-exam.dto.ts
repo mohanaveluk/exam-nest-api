@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsArray, ValidateNested, IsEnum, IsNotEmpty } from 'class-validator';
+import { IsString, IsNumber, IsArray, ValidateNested, IsEnum, IsNotEmpty, IsUUID } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -82,12 +82,11 @@ export class CreateExamDto {
   description: string;
 
   @ApiProperty({
-    description: 'Category of the exam',
-    example: '1'
+    description: 'Category ID of the exam',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
-  @IsString()
   @IsNotEmpty()
-  category: string;
+  categoryId: string;
 
   @ApiProperty({
     description: 'Additional notes about the exam',

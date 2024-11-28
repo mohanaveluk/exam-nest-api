@@ -1,5 +1,5 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNumber, IsOptional, IsUUID, IsNotEmpty } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateExamDto {
   @ApiPropertyOptional({
@@ -18,13 +18,21 @@ export class UpdateExamDto {
   @IsOptional()
   description?: string;
 
-  @ApiPropertyOptional({
-    description: 'Category of the exam',
-    example: '2'
+  // @ApiPropertyOptional({
+  //   description: 'Category of the exam',
+  //   example: '2'
+  // })
+  // @IsString()
+  // @IsOptional()
+  // category?: string;
+  
+  @ApiProperty({
+    description: 'Category ID of the exam',
+    example: '123e4567-e89b-12d3-a456-426614174000'
   })
-  @IsString()
-  @IsOptional()
-  category?: string;
+  @IsUUID()
+  @IsNotEmpty()
+  categoryId: string;
 
   @ApiPropertyOptional({
     description: 'Additional notes about the exam',
