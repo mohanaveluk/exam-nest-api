@@ -1,5 +1,7 @@
-import { IsString, IsNumber, IsOptional, IsUUID, IsNotEmpty } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsUUID, IsNotEmpty, IsArray, ValidateNested } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { QuestionDto } from './create-exam.dto';
+import { Type } from 'class-transformer';
 
 export class UpdateExamDto {
   @ApiPropertyOptional({
@@ -65,4 +67,13 @@ export class UpdateExamDto {
   @IsNumber()
   @IsOptional()
   status?: number;
+
+  @ApiPropertyOptional({
+    description: 'Array of questions in the exam',
+    type: [QuestionDto]
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => QuestionDto)
+  questions: QuestionDto[];
 }

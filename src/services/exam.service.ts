@@ -353,6 +353,58 @@ export class ExamService {
     exam.updatedAt = new Date();
 
     const updatedExam = await this.examRepository.save(exam);
+
+    // Delete and save questions with their options
+    if(updateExamDto.questions && updateExamDto.questions.length > 0){
+      // Find all questions for the given exam ID
+      const questions = await this.questionRepository.find({
+        where: { exam: { id: examId } },
+        relations: ['options'],
+      });
+
+      if (questions) {
+        // Collect all option IDs to delete
+        const optionIds = questions.flatMap(question => question.options.map(option => option.id));
+        // Delete all options
+        if (optionIds.length > 0) {
+          await this.optionRepository.delete(optionIds);
+        }
+      }
+
+      // Remove existing options
+      await this.questionRepository.remove(exam.questions);
+
+      // Create and save questions with their options
+      const newQuestions = await Promise.all(
+        updateExamDto.questions.map(async (questionDto) => {
+          const question = new Question();
+        question.question = questionDto.question;
+        question.type = questionDto.type;
+        question.correctAnswers = questionDto.correctAnswers;
+        question.order = questionDto.order;
+        question.exam = updatedExam;
+        question.isDeleted = false;
+        question.qguid = uuidv4();
+        
+        const savedQuestion = await this.questionRepository.save(question);
+
+        // Create and save options for the question
+        const options = await Promise.all(
+          questionDto.options.map(async (optionText) => {
+            const option = new Option();
+            option.text = optionText;
+            option.question = savedQuestion;
+            return await this.optionRepository.save(option);
+          })
+        );
+
+        savedQuestion.options = options;
+        return savedQuestion;
+        })
+      );
+      updatedExam.questions = newQuestions;
+    }
+
     return this.serializeExam(updatedExam, true);
   }
 
