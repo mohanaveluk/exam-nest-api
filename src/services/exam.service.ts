@@ -92,7 +92,7 @@ export class ExamService {
     });
     
     const exam = new Exam();
-    exam.id = uuidv4().replace(/-/g, "");
+    exam.id = uuidv4();
     exam.sid = await this.examRepository.count() + 1;
     exam.title = createExamDto.title;
     exam.description = createExamDto.description;
@@ -117,7 +117,7 @@ export class ExamService {
         question.order = questionDto.order;
         question.exam = savedExam;
         question.isDeleted = false;
-        question.qguid = uuidv4().replace(/-/g, "");
+        question.qguid = uuidv4();
 
         const savedQuestion = await this.questionRepository.save(question);
 
@@ -156,7 +156,7 @@ export class ExamService {
     question.order = createQuestionDto.order;
     question.exam = exam;
     question.isDeleted = false;
-    question.qguid = uuidv4().replace(/-/g, "");
+    question.qguid = uuidv4();
 
     const savedQuestion = await this.questionRepository.save(question);
 
@@ -179,10 +179,16 @@ export class ExamService {
   }
   
   async getAllExams() {
-    const exams = await this.examRepository.find({
+    let exams = await this.examRepository.find({
+      relations: ['category'],
       //relations: ['questions', 'questions.options'],
       where: { status: 1 }
     });
+
+    // exams.forEach(item => {
+    //   item.categoryText = item.category.name;
+    // });
+
     return exams.map(exam => this.serializeExam(exam, false));
   }
 
@@ -199,10 +205,23 @@ export class ExamService {
     return this.serializeExam(exam, false);
   }
 
+  async getExamWithQuestions(examId: string) {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['category', 'questions']
+    });
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    return this.serializeExam(exam, false);
+  }
+
   async getExamDetails(examId: string) {
     const exam = await this.examRepository.findOne({
       where: { id: examId },
-      relations: ['questions']
+      relations: ['category']
       //relations: ['questions', 'questions.options']
     });
 
@@ -388,9 +407,9 @@ export class ExamService {
     return this.serializeQuestion(updatedQuestion, true);
   }
 
-  async softDeleteQuestion(examId: string, questionId: number) {
+  async softDeleteQuestion(examId: string, questionId: string) {
     const question = await this.questionRepository.findOne({
-      where: { id: questionId, exam: { id: examId } },
+      where: { qguid: questionId, exam: { id: examId } },
     });
 
     if (!question) {

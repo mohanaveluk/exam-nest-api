@@ -15,7 +15,7 @@ export class CategoryService {
 
   async create(createCategoryDto: CreateCategoryDto) {
     const category = new Category();
-    category.id = uuidv4().replace(/-/g, "");
+    category.id = uuidv4();
     category.name = createCategoryDto.name;
     category.description = createCategoryDto.description;
     

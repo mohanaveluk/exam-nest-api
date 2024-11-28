@@ -102,7 +102,7 @@ export class ExamController {
     }
   }
 
-  @Get(':examId/questions')
+  @Get(':examId/question')
   @ApiOperation({ summary: 'Get random question for exam' })
   @SwaggerResponse({ status: 200, description: 'Random question from exam' })
   async getRandomQuestion(
@@ -119,6 +119,22 @@ export class ExamController {
       );
     }
   }
+
+  @Get(':examId/questions')
+  @ApiOperation({ summary: 'Get exam with all question for edit' })
+  @SwaggerResponse({ status: 200, description: 'Exam details including questions' })
+  async getExamQuestions(@Param('examId') examId: string): Promise<ApiResponse<ExamResponseDto>> {
+    try {
+      const exam = await this.examService.getExamWithQuestions(examId);
+      return new ApiResponse(true, 'Exam details retrieved successfully', exam);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to retrieve exam details', null, error.message),
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
 
   @Get('/question/:qguid')
   @ApiOperation({ summary: 'Get question for by question guid' })
@@ -223,7 +239,7 @@ export class ExamController {
   @SwaggerResponse({ status: 200, description: 'Question deleted successfully' })
   async softDeleteQuestion(
     @Param('examId') examId: string,
-    @Param('questionId') questionId: number,
+    @Param('questionId') questionId: string,
   ): Promise<ApiResponse<void>> {
     try {
       await this.examService.softDeleteQuestion(examId, questionId);
