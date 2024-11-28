@@ -1,7 +1,7 @@
 export const contactAdminTemplate = (data: {
   fullName: string;
   email: string;
-  mobileNumber: string;
+  mobile: string;
   message: string;
 }) => `
 <!DOCTYPE html>
@@ -12,7 +12,7 @@ export const contactAdminTemplate = (data: {
   <ul>
     <li><strong>Name:</strong> ${data.fullName}</li>
     <li><strong>Email:</strong> ${data.email}</li>
-    <li><strong>Mobile:</strong> ${data.mobileNumber}</li>
+    <li><strong>Mobile:</strong> ${data.mobile}</li>
   </ul>
   <h3>Message:</h3>
   <p>${data.message}</p>

@@ -1,1 +1,9 @@
-node_modules
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+logs

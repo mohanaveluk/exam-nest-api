@@ -49,27 +49,27 @@ export class RegisterDto {
     example: '+11234567890',
     description: 'US mobile number with country code',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @Matches(/^\+1[0-9]{10}$/, {
     message: 'Mobile number must be in format: +1XXXXXXXXXX (10 digits after country code)'
   })
-  mobile: string;
+  mobile?: string;
 
   @ApiProperty({
     example: 'Computer Science',
     description: 'User major/field of study',
   })
-  @IsNotEmpty()
-  major: string;
+  @IsOptional()
+  major?: string;
 
   @ApiProperty({
     example: new Date(),
     description: 'User creation timestamp',
   })
-  @IsNotEmpty()
+  @IsOptional()
   @IsDate()
   @Type(() => Date)
-  created_at: Date = new Date();
+  created_at?: Date = new Date();
 
   @ApiProperty({
     example: null,
@@ -88,6 +88,6 @@ export class RegisterDto {
     required: true,
     nullable: false,
   })
-  @IsNotEmpty()
-  roleGuid: string;
+  @IsOptional()
+  role_id: string;
 }

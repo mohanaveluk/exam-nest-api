@@ -9,6 +9,7 @@ import { RolesModule } from './modules/roles.module';
 import { RolesService } from './services/roles.service';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { LogModule } from './modules/log.module';
+import { ExamModule } from './modules/exam.module';
 
 @Module({
   imports: [
@@ -22,13 +23,19 @@ import { LogModule } from './modules/log.module';
       database: process.env.DB_DATABASE || 'exam_db',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
+      logging: false,
+      logger: 'simple-console',
+      migrationsRun: true,
+      migrations: [__dirname + '/database/migrations/**/*.{ts,js}'],
+      connectTimeout: 60000, // 60 seconds
     }),
     //TypeOrmModule.forFeature([LogRepository]),
     AuthModule,
     RolesModule,
     ContactModule,
     EmailModule,
-    LogModule
+    LogModule,
+    ExamModule
   ],
   providers: [
     //CustomLoggerService,
@@ -42,7 +49,7 @@ export class AppModule implements OnModuleInit {
   constructor(private readonly rolesService: RolesService) {}
 
   async onModuleInit() {
-    await this.rolesService.createInitialRoles();
+    //await this.rolesService.createInitialRoles();
   }
 
 }

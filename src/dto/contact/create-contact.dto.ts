@@ -33,7 +33,7 @@ export class CreateContactDto {
   @Matches(/^\+1[0-9]{10}$/, {
     message: 'Mobile number must be in format: +1XXXXXXXXXX (10 digits after country code)'
   })
-  mobileNumber: string;
+  mobile: string;
 
   @ApiProperty({
     example: 'I would like to inquire about your services...',
