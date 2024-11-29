@@ -97,6 +97,13 @@ export class CreateExamDto {
   notes: string;
 
   @ApiProperty({
+    description: 'Total Questions to be delivered to  the exam',
+    example: 60
+  })
+  @IsNumber()
+  totalQuestions: number;
+
+  @ApiProperty({
     description: 'Duration of the exam in minutes',
     example: 90
   })

@@ -102,7 +102,7 @@ export class ExamService {
     exam.createdAt = new Date();
     exam.duration = createExamDto.duration;
     exam.passingScore = createExamDto.passingScore;
-    exam.totalQuestions = createExamDto.questions.length;
+    exam.totalQuestions = createExamDto.totalQuestions;
     exam.status = createExamDto.status;
 
     const savedExam = await this.examRepository.save(exam);
@@ -172,7 +172,7 @@ export class ExamService {
     savedQuestion.options = options;
 
     // Update exam's total questions count
-    exam.totalQuestions += 1;
+    //exam.totalQuestions += 1;
     await this.examRepository.save(exam);
 
     return this.serializeQuestion(savedQuestion, true);
@@ -347,6 +347,7 @@ export class ExamService {
     if (updateExamDto.description) exam.description = updateExamDto.description;
     exam.category = category;
     if (updateExamDto.notes) exam.notes = updateExamDto.notes;
+    if (updateExamDto.totalQuestions) exam.totalQuestions = updateExamDto.totalQuestions;
     if (updateExamDto.duration) exam.duration = updateExamDto.duration;
     if (updateExamDto.passingScore) exam.passingScore = updateExamDto.passingScore;
     if (updateExamDto.status) exam.status = updateExamDto.status;
@@ -474,7 +475,7 @@ export class ExamService {
     // Update total questions count
     const exam = await this.examRepository.findOne({ where: { id: examId } });
     if (exam) {
-      exam.totalQuestions -= 1;
+      //exam.totalQuestions -= 1;
       await this.examRepository.save(exam);
     }
   }

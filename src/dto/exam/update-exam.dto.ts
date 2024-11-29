@@ -44,6 +44,13 @@ export class UpdateExamDto {
   @IsOptional()
   notes?: string;
 
+  @ApiProperty({
+    description: 'Total Questions to be delivered to  the exam',
+    example: 60
+  })
+  @IsNumber()
+  totalQuestions: number;
+  
   @ApiPropertyOptional({
     description: 'Duration of the exam in minutes',
     example: 120
