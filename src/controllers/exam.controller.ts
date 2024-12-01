@@ -1,4 +1,4 @@
-import { Controller, Post, Put, Delete, Body, Param, HttpException, HttpStatus, UseInterceptors, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Put, Delete, Body, Param, HttpException, HttpStatus, UseInterceptors, Get, Query, UseGuards, UnauthorizedException } from '@nestjs/common';
 import { ExamService } from '../services/exam.service';
 import { CreateExamDto } from '../dto/exam/create-exam.dto';
 import { UpdateExamDto } from '../dto/exam/update-exam.dto';
@@ -16,6 +16,9 @@ import { OptionResponseDto } from 'src/dto/exam/option-response.dto';
 import { CreateQuestionDto } from 'src/dto/exam/create-question.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { AuthorizationGuard } from 'src/guards/jwt-authorization.guard';
+import { User } from 'src/auth/decorators/user.decorator';
+import { ExamSessionDto } from 'src/dto/exam/exam-session.dto';
+import { exceptions } from 'winston';
 
 @ApiTags('Exam')
 @UseInterceptors(TimeoutInterceptor)
@@ -103,22 +106,150 @@ export class ExamController {
   }
 
   @Get(':examId/question')
+  @AllowRoles(UserRole.Admin, UserRole.User)
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, AuthorizationGuard)
   @ApiOperation({ summary: 'Get random question for exam' })
   @SwaggerResponse({ status: 200, description: 'Random question from exam' })
   async getRandomQuestion(
     @Param('examId') examId: string,
+    @User('id') userId: any,
     @Query('direction') direction?: 'next' | 'prev',
   ): Promise<ApiResponse<QuestionResponseDto>> {
     try {
-      const question = await this.examService.getExamQuestion(examId, direction);
+      if (!userId) {
+        throw new UnauthorizedException('User is not authenticated or invalid');
+      }
+      const tempUserId = typeof userId === 'object' ? `${userId.id}` : `${userId}`;
+      const question = await this.examService.getExamQuestion(examId, tempUserId, direction);
       return new ApiResponse(true, 'Question retrieved successfully', question);
     } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw new HttpException(
+          new ApiResponse(false, error.message, null),
+          HttpStatus.UNAUTHORIZED,
+        );
+      }
       throw new HttpException(
         new ApiResponse(false, 'Failed to retrieve question', null, error.message),
         HttpStatus.NOT_FOUND,
       );
     }
   }
+
+
+
+  @Post(':examId/start')
+  @AllowRoles(UserRole.Admin, UserRole.User)
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, AuthorizationGuard)
+  @ApiOperation({ summary: 'Start a new exam session' })
+  @SwaggerResponse({ status: 201, description: 'Exam session started successfully' })
+  async startNewExam(@Param('examId') examId: string, @User('id') userId: any): Promise<ApiResponse<ExamSessionDto>> {
+    try {
+      const tempUserId = typeof userId === 'object' ? `${userId.id}` : `${userId}`;
+      const examSession = await this.examService.startNewExam(examId, tempUserId);
+      return new ApiResponse(true, 'Exam session started successfully', examSession);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to start exam session', null, error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Post(':examId/questions/:questionId/submit')
+  @AllowRoles(UserRole.User, UserRole.Admin)
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, AuthorizationGuard)
+  @ApiOperation({ summary: 'Submit answer for a question' })
+  @SwaggerResponse({ status: 200, description: 'Answer submitted successfully' })
+  async submitAnswer(
+    @Param('examId') examId: string,
+    @Param('questionId') questionId: string,
+    @User('id') userId: any,
+    @Body() answers: ValidateAnswersDto,
+  ): Promise<ApiResponse<ExamSessionDto>> {
+    try {
+      const tempUserId = typeof userId === 'object' ? `${userId.id}` : `${userId}`;
+      const session = await this.examService.submitAnswer(examId, tempUserId, questionId, answers);
+      return new ApiResponse(true, 'Answer submitted successfully', session);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to submit answer', null, error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+
+
+  @Put(':examId/pause')
+  @AllowRoles(UserRole.User, UserRole.Admin)
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, AuthorizationGuard)
+  @ApiOperation({ summary: 'Pause current exam session' })
+  @SwaggerResponse({ status: 200, description: 'Exam session paused successfully' })
+  async pauseExam(
+    @Param('examId') examId: string,
+    @User('id') userId: any,
+  ): Promise<ApiResponse<ExamSessionDto>> {
+    try {
+      const tempUserId = typeof userId === 'object' ? `${userId.id}` : `${userId}`;
+      const session = await this.examService.pauseExam(examId, tempUserId);
+      return new ApiResponse(true, 'Exam session paused successfully', session);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to pause exam session', null, error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Put(':examId/resume')
+  @AllowRoles(UserRole.User, UserRole.Admin)
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, AuthorizationGuard)
+  @ApiOperation({ summary: 'Resume paused exam session' })
+  @SwaggerResponse({ status: 200, description: 'Exam session resumed successfully' })
+  async resumeExam(
+    @Param('examId') examId: string,
+    @User('id') userId: any,
+  ): Promise<ApiResponse<ExamSessionDto>> {
+    try {
+      const tempUserId = typeof userId === 'object' ? `${userId.id}` : `${userId}`;
+      const session = await this.examService.resumeExam(examId, tempUserId);
+      return new ApiResponse(true, 'Exam session resumed successfully', session);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to resume exam session', null, error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Get(':examId/progress')
+  @AllowRoles(UserRole.User, UserRole.Admin)
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard, AuthorizationGuard)
+  @ApiOperation({ summary: 'Get current exam progress' })
+  @SwaggerResponse({ status: 200, description: 'Exam progress retrieved successfully' })
+  async getExamProgress(
+    @Param('examId') examId: string,
+    @User('id') userId: any,
+  ): Promise<ApiResponse<ExamSessionDto>> {
+    try {
+      const tempUserId = typeof userId === 'object' ? `${userId.id}` : `${userId}`;
+      const progress = await this.examService.getExamProgress(examId, tempUserId);
+      return new ApiResponse(true, 'Exam progress retrieved successfully', progress);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to retrieve exam progress', null, error.message),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
 
   @Get(':examId/questions')
   @ApiOperation({ summary: 'Get exam with all question for edit' })
@@ -137,7 +268,7 @@ export class ExamController {
 
 
   @Get('/question/:qguid')
-  @ApiOperation({ summary: 'Get question for by question guid' })
+  @ApiOperation({ summary: 'Get question for for a exam by question guid' })
   @SwaggerResponse({ status: 200, description: 'Get question by question guid' })
   async getQuestion(
     @Param('qguid') qguid: string

@@ -13,7 +13,7 @@ import { ExamModule } from './modules/exam.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true,  envFilePath: `.env.${process.env.NODE_ENV || 'development'}` }),
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DB_HOST || 'localhost',
