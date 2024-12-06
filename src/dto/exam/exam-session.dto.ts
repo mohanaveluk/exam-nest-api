@@ -51,7 +51,20 @@ export class ExamSessionDto {
   })
   questionOrder: string[];
 
+  @ApiProperty({
+    description: 'List of questions marked for review',
+    type: [String],
+    example: ['1', '3', '5']
+  })
+  reviewList: string[];
   
+  @ApiProperty({
+    description: 'Session id of the exam',
+    type: String,
+    example: '36b1fbd6-b92a-4e44-8dc2-39c78a4375db'
+  })
+  id: string;
+
   /*@ApiProperty({
     description: 'Total questions for the exam',
     example: 60

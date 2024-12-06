@@ -40,6 +40,10 @@ export class ExamSession {
   @Column('json', { nullable: true })
   answeredQuestions: Record<string, number[]>;
 
+
+  @Column('simple-array', { nullable: true })
+  reviewList: string[];
+  
   @CreateDateColumn()
   createdAt: Date;
 

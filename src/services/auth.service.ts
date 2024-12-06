@@ -82,7 +82,6 @@ export class AuthService {
       email: user.email,
       firstName: user.first_name,
       lastName: user.last_name,
-      //role: user.role_guid
     };
     
     return {
@@ -93,9 +92,8 @@ export class AuthService {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
-        //role: user.role_guid
-      }
-    };
+      }      
+   };
   }
 
   async updatePassword(userId: number, updatePasswordDto: UpdatePasswordDto) {

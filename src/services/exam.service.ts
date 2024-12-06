@@ -15,6 +15,11 @@ import { ExamSession } from 'src/models/exam/exam-session.entity';
 import { ExamSessionDto } from 'src/dto/exam/exam-session.dto';
 import { In } from 'typeorm';
 import { UserAnswer } from 'src/models/exam/user-answer.entity';
+import { AnswerResponseDto } from 'src/dto/exam/answer-response.dto';
+import { ExamResultDto, QuestionResultDto } from 'src/dto/exam/exam-result.dto';
+import { ExamResult } from 'src/models/exam/exam-result.entity';
+import { ReviewQuestionResponseDto } from 'src/dto/exam/review-question-response.dto';
+import { ExamResultsResponseDto } from 'src/dto/exam/exam-results-response.dto';
 
 @Injectable()
 export class ExamService {
@@ -24,6 +29,9 @@ export class ExamService {
     startTime?: Date;
     endTime?: Date;
   }> = new Map();
+
+  addToListIds: string[] = ['sX9ptU', 'PIJDju', 'BwrQnU', 'hCTOis', 'q8VE9M', '4cUG7d', 'suoNHW', 'w0b543', 'Ud69Dy', 'ZyPcQb'];
+  removeFromListIds: string[] = ['D0nhUZ', 'XglVdb', 'Px5RVn', '8BdsR1', 'zWNMja', 'HzrynY', 'BXenA1', 'Fz2HFg', 'bTE9qw', 'TdIP5P'];
 
   constructor(
     @InjectRepository(Exam)
@@ -38,6 +46,8 @@ export class ExamService {
     private examSessionRepository: Repository<ExamSession>,
     @InjectRepository(UserAnswer)
     private userAnswerRepository: Repository<UserAnswer>,
+    @InjectRepository(ExamResult)
+    private examResultRepository: Repository<ExamResult>,
   ) {}
   
   private serializeExam(exam: Exam, includeAnswers = false) {
@@ -374,12 +384,12 @@ export class ExamService {
     return this.mapSessionToDto(session);
   }
 
-  async getExamQuestion(examId: string, userId: string, direction?: 'next' | 'prev') {
+  async getExamQuestion(sessionId: string, examId: string, userId: string, direction?: 'next' | 'prev') {
     let cachedExam = this.examQuestionsCache.get(examId);
-    const session = await this.getActiveSession(examId, userId);
+    const session = await this.getActiveSession(sessionId, examId, userId);
 
     if (session.status === 'paused') {
-      throw new BadRequestException('Exam is paused. Please resume to continue.');
+      //throw new BadRequestException('Exam is paused. Please resume to continue.');
     }
 
     const exam = await this.examRepository.findOne({
@@ -387,20 +397,7 @@ export class ExamService {
       relations: ['questions', 'questions.options'],
     });
 
-    // if (!cachedExam) {
-    //   throw new BadRequestException('No active exam session found. Please start a new exam.');
-    // }
 
-    //// Check if exam time has expired
-    // if (cachedExam.endTime && new Date() > cachedExam.endTime) {
-    //   throw new BadRequestException('Exam time has expired');
-    // }
-
-    // if (direction === 'next' && cachedExam.currentIndex < cachedExam.questions.length - 1) {
-    //   cachedExam.currentIndex++;
-    // } else if (direction === 'prev' && cachedExam.currentIndex > 0) {
-    //   cachedExam.currentIndex--;
-    // }
     // Update current index based on direction
     if (direction === 'next' && session.currentIndex < session.questionOrder.length - 1) {
       session.currentIndex++;
@@ -439,17 +436,29 @@ export class ExamService {
     const userAnswer = await this.userAnswerRepository.findOne({
       where: {
         exam: { id: examId },
-        userId,
+        session: { id: sessionId },
         question: { id: currentQuestion.id },
-      },
+        userId
+      }
     });
 
+    const userAnswerMaxQuestion = await this.userAnswerRepository.createQueryBuilder('userAnswer')
+      .where('userAnswer.examId = :examId', { examId })
+      .andWhere('userAnswer.sessionId = :sessionId', { sessionId })
+      .andWhere('userAnswer.userId = :userId', { userId })
+      .orderBy('userAnswer.questionIndex', 'DESC')
+      .getOne();
+
+    const questionCurrentIndex = userAnswerMaxQuestion ? userAnswerMaxQuestion.questionIndex: 0;
+      
     return {
       ...this.serializeQuestion(currentQuestion),
       questionNumber: session.currentIndex + 1,
       totalQuestions: session.questionOrder.length,
       timeRemaining: this.calculateTimeRemaining(session),
       userAnswers: userAnswer?.selectedOptions || [],
+      questionIndex: session.currentIndex, //userAnswer?.questionIndex === undefined ? questionCurrentIndex : userAnswer?.questionIndex,
+      reviewList: session.reviewList
     };
   }
 
@@ -458,27 +467,60 @@ export class ExamService {
     this.examQuestionsCache.delete(examId);
   }
 
-  async submitAnswer(examId: string, userId: string, questionId: string, answers: ValidateAnswersDto) {
-    const session = await this.getActiveSession(examId, userId);
+  async submitAnswer(sessionId: string, examId: string, userId: string, questionGuid: string, answers: ValidateAnswersDto, addToReview: string = "kjmGrZ") {
+    const session = await this.getActiveSession(sessionId, examId, userId);
+
+    const exam = await this.examRepository.findOne({
+      where: { id: examId }
+    });
 
     if (session.status === 'paused') {
       throw new BadRequestException('Exam is paused. Please resume to continue.');
     }
 
+    if (this.isSessionExpired(session)) {
+      session.status = 'completed';
+      await this.examSessionRepository.save(session);
+      throw new BadRequestException('Exam session has expired');
+    }
+
     const question = await this.questionRepository.findOne({
-      where: { id: parseInt(questionId) },
+      //where: { id: parseInt(questionId) },
+      where: { qguid: questionGuid },
     });
 
     if (!question) {
       throw new NotFoundException('Question not found');
     }
 
+    // Validate if the question is part of the current session
+    const questionIndex = session.questionOrder.indexOf(question?.id?.toString());
+    if (questionIndex === -1) {
+      throw new BadRequestException('This question is not part of the current exam session');
+    }
+
 
     // Update answered questions
     session.answeredQuestions = {
       ...(session.answeredQuestions || {}),
-      [questionId]: answers.selectedAnswers,
+      [questionGuid]: answers?.selectedAnswers,
     };
+
+    //add/Remove ReviewList function
+    if (!session.reviewList) {
+      session.reviewList = [];
+    }
+
+    if(addToReview === "bSUw7u"){ //Add
+      if (!session.reviewList.includes(question.id.toString())) {
+        session.reviewList.push(question.id.toString());
+      }
+    } 
+    else if(addToReview === "kjmGrZ"){ //remove
+      if (session.reviewList) {
+        session.reviewList = session.reviewList.filter(id => id !== question.id.toString());
+      }
+    }
 
     await this.examSessionRepository.save(session);
 
@@ -488,6 +530,7 @@ export class ExamService {
         exam: { id: examId },
         userId,
         question: { id: question.id },
+        session: { id: session.id }
       },
     });
 
@@ -496,22 +539,21 @@ export class ExamService {
       await this.userAnswerRepository.save(userAnswer);
     } else {
       userAnswer = await this.userAnswerRepository.save({
-        exam: session.exam,
+        exam: exam,
         userId,
         question,
-        questionIndex: session.currentIndex,
+        session,
+        questionIndex: questionIndex,
         selectedOptions: answers.selectedAnswers,
       });
     }
-
-
 
     return this.mapSessionToDto(session);
   }
 
 
-  async pauseExam(examId: string, userId: string): Promise<ExamSessionDto> {
-    const session = await this.getActiveSession(examId, userId);
+  async pauseExam(sessionId: string, examId: string, userId: string): Promise<ExamSessionDto> {
+    const session = await this.getActiveSession(sessionId, examId, userId);
     
     if (session.status === 'paused') {
       throw new BadRequestException('Exam is already paused');
@@ -524,8 +566,8 @@ export class ExamService {
     return this.mapSessionToDto(updatedSession);
   }
 
-  async resumeExam(examId: string, userId: string): Promise<ExamSessionDto> {
-    const session = await this.getActiveSession(examId, userId);
+  async resumeExam(sessionId: string, examId: string, userId: string): Promise<ExamSessionDto> {
+    const session = await this.getActiveSession(sessionId, examId, userId);
     
     if (session.status !== 'paused') {
       throw new BadRequestException('Exam is not paused');
@@ -542,8 +584,8 @@ export class ExamService {
   }
 
 
-  async getExamProgress(examId: string, userId: string): Promise<ExamSessionDto> {
-    const session = await this.getActiveSession(examId, userId);
+  async getExamProgress(sessionId:string, examId: string, userId: string): Promise<ExamSessionDto> {
+    const session = await this.getActiveSession(sessionId, examId, userId);
     return this.mapSessionToDto(session);
   }
 
@@ -563,17 +605,208 @@ export class ExamService {
   }
 
 
-  private async getActiveSession(examId: string, userId: string): Promise<ExamSession> {
-    const statuses: ("active" | "paused" | "completed")[] = ["active", "paused"];
-    const session = await this.examSessionRepository.findOne({
+  async getAnswer(examId: string, sessionId: string, questionGuid: string, userId: string): Promise<AnswerResponseDto> {
+    // Verify the session exists and belongs to the user
+    const session = await this.examSessionRepository
+      .createQueryBuilder('session')
+      .leftJoinAndSelect('session.exam', 'exam')
+      .where('session.id = :sessionId', { sessionId })
+      .andWhere('exam.id = :examId', { examId })
+      .andWhere('session.userId = :userId', { userId })
+      .andWhere('session.status IN (:...statuses)', { statuses: ['active', 'paused'] })
+      .getOne();
+
+    if (!session) {
+      throw new NotFoundException('Exam session not found or not accessible');
+    }
+
+    const question = await this.questionRepository.findOne({
+      //where: { id: parseInt(questionId) },
+      where: { qguid: questionGuid },
+    });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    // Find the answer for the specific question in this session
+    /*const answer1 = await this.userAnswerRepository.findOne({
+      where: {
+        exam: { id: examId },
+        session: { id: sessionId },
+        question: { id: question.id },
+        userId
+      }
+    });*/
+
+    const answer = await this.userAnswerRepository
+      .createQueryBuilder('answer')
+      .leftJoinAndSelect('answer.exam', 'exam')
+      .leftJoinAndSelect('answer.session', 'session')
+      .leftJoinAndSelect('answer.question', 'question')
+      .where('exam.id = :examId', { examId })
+      .andWhere('session.id = :sessionId', { sessionId })
+      .andWhere('question.id = :questionId', { questionId: question.id })
+      .andWhere('answer.userId = :userId', { userId })
+      .getOne();
+      
+
+    if (!answer) {
+      throw new NotFoundException('Answer not found for this question');
+    }
+
+    return {
+      id: answer.id,
+      selectedOptions: answer.selectedOptions,
+      questionIndex: answer.questionIndex,
+      createdAt: answer.createdAt
+    };
+  }
+
+  //Review list functions
+
+  async addToReviewList(sessionId: string, examId: string, userId: string, questionId: string): Promise<ExamSessionDto> {
+    const session = await this.getActiveSession(sessionId, examId, userId);
+
+    if (!session.reviewList) {
+      session.reviewList = [];
+    }
+
+    if (!session.reviewList.includes(questionId)) {
+      session.reviewList.push(questionId);
+      await this.examSessionRepository.save(session);
+    }
+
+    return this.mapSessionToDto(session);
+  }
+
+  async removeFromReviewList(sessionId: string, examId: string, userId: string, questionId: string): Promise<ExamSessionDto> {
+    const session = await this.getActiveSession(sessionId, examId, userId);
+
+    if (session.reviewList) {
+      session.reviewList = session.reviewList.filter(id => id !== questionId);
+      await this.examSessionRepository.save(session);
+    }
+
+    return this.mapSessionToDto(session);
+  }
+
+  async getReviewList(sessionId: string, examId: string, userId: string): Promise<ReviewQuestionResponseDto[]> {
+    const session = await this.getActiveSession(sessionId, examId, userId);
+
+    if (!session.reviewList || session.reviewList.length === 0) {
+      return [];
+    }
+
+    const questions = await this.questionRepository.find({
+      where: { id: In(session.reviewList.map(id => parseInt(id))), exam: { id: examId } },
+      relations: ['options']
+    });
+
+    const userAnswers = await this.userAnswerRepository.find({
+      relations: ['question'],
+      where: {
+        exam: { id: examId },
+        session: { id: sessionId },
+        userId,
+        question: { id: In(questions.map(q => q.id)) }
+      }
+    });
+
+    return questions.map(question => {
+      const userAnswer = userAnswers.find(ua => ua.question.id === question.id);
+      return {
+        id: question.id,
+        question: question.question,
+        qguid: question.qguid,
+        type: question.type,
+        options: question.options.map(option => ({
+          id: option.id,
+          text: option.text
+        })),
+        questionIndex: userAnswer?.questionIndex,
+        userAnswers: userAnswer?.selectedOptions || [],
+        questionNumber: session.questionOrder.indexOf(question.id.toString()) + 1,
+        totalQuestions: session.questionOrder.length,
+        timeRemaining: this.calculateTimeRemaining(session)
+      };
+    });
+  }
+
+  async getReviewQuestion(sessionId: string, examId: string, userId: string, questionId: string): Promise<ReviewQuestionResponseDto> {
+    const session = await this.getActiveSession(sessionId, examId, userId);
+
+    const question = await this.questionRepository.findOne({
+      where: { qguid: questionId, exam: { id: examId } },
+      relations: ['options']
+    });
+
+    if (!question) {
+      throw new NotFoundException('Question not found');
+    }
+
+    if (!session.reviewList?.includes(question.id?.toString())) {
+      throw new NotFoundException('Question not found in review list');
+    }
+
+    const userAnswer = await this.userAnswerRepository.findOne({
       where: {
         exam: { id: examId },
         userId,
-        status: In(statuses),
-      },
+        question: { id: question.id }
+      }
     });
 
+    return {
+      id: question.id,
+      question: question.question,
+      type: question.type,
+      options: question.options.map(option => ({
+        id: option.id,
+        text: option.text
+      })),
+      questionIndex: userAnswer?.questionIndex,
+      userAnswers: userAnswer?.selectedOptions || [],
+      questionNumber: session.questionOrder.indexOf(question.id.toString()) + 1,
+      totalQuestions: session.questionOrder.length,
+      timeRemaining: this.calculateTimeRemaining(session)
+    };
+  }
+
+  private calculateTimeRemaining(session: ExamSession): number {
+    if (session.status === 'completed') {
+      return 0;
+    }
+
+    const now = new Date();
+    const endTime = new Date(session.endTime);
+    const pausedTime = session.totalPausedTime || 0;
+
+    if (session.status === 'paused') {
+      const pausedAt = new Date(session.pausedAt);
+      const additionalPausedTime = now.getTime() - pausedAt.getTime();
+      return Math.max(0, endTime.getTime() - now.getTime() - pausedTime - additionalPausedTime);
+    }
+
+    return Math.max(0, endTime.getTime() - now.getTime() - pausedTime);
+  }
+
+
+
+  private async getActiveSession(sessionId: string, examId: string, userId: string): Promise<ExamSession> {
+   
+    const session = await this.examSessionRepository
+      .createQueryBuilder('session')
+      .leftJoinAndSelect('session.exam', 'exam')
+      .where('session.id = :sessionId', { sessionId })
+      .andWhere('exam.id = :examId', { examId })
+      .andWhere('session.userId = :userId', { userId })
+      .andWhere('session.status IN (:...statuses)', { statuses: ['active', 'paused'] })
+      .getOne();
+
+
     if (!session) {
+
       throw new NotFoundException('No active exam session found');
     }
 
@@ -591,7 +824,7 @@ export class ExamService {
     return session.status === 'active' && now > session.endTime;
   }
 
-  private calculateTimeRemaining(session: ExamSession): number {
+  private calculateTimeRemaining1(session: ExamSession): number {
     if (session.status === 'paused') {
       return session.endTime.getTime() - session.pausedAt.getTime();
     }
@@ -600,6 +833,7 @@ export class ExamService {
 
   private mapSessionToDto(session: ExamSession): ExamSessionDto {
     return {
+      id: session.id,
       status: session.status,
       currentIndex: session.currentIndex,
       startTime: session.startTime,
@@ -608,6 +842,7 @@ export class ExamService {
       totalPausedTime: session.totalPausedTime,
       answeredQuestions: session.answeredQuestions,
       questionOrder: session.questionOrder,
+      reviewList: session.reviewList || []
     };
   }
 
@@ -855,4 +1090,230 @@ export class ExamService {
       .map(index => question.options[index].text)
       .join(', ')}`;
   }
+  
+  //validate exam result again user answer table
+
+  async evaluateExam(sessionId: string, examId: string, userId: string): Promise<ExamResultDto> {
+    // First check if result already exists
+    const existingResult = await this.examResultRepository.findOne({
+      where: {
+        session: { id: sessionId },
+        exam: { id: examId },
+        userId
+      },
+      relations: ['exam', 'session']
+    });
+
+    if (existingResult) {
+      return {
+        sessionId,
+        exam: {
+          id: existingResult.exam.id,
+          title: existingResult.exam.title,
+          description: existingResult.exam.description,
+          duration: existingResult.exam.duration,
+          passingScore: existingResult.exam.passingScore,
+          category: {
+            cguid: "", //existingResult.exam.category?.id,
+            name: "", //existingResult.exam.category?.name,
+            description: "", //existingResult.exam.category?.description
+          }
+        },
+        totalQuestions: existingResult.totalQuestions,
+        correctAnswers: existingResult.correctAnswers,
+        scorePercentage: Number(existingResult.scorePercentage),
+        passed: existingResult.passed,
+        questions: existingResult.questionResults
+      };
+    }
+
+    // Get the exam session with related exam
+    const session = await this.examSessionRepository.findOne({
+      where: { 
+        id: sessionId,
+        exam: { id: examId },
+        userId
+      },
+      relations: ['exam']
+    });
+
+    if (!session) {
+      throw new NotFoundException('Exam session not found');
+    }
+
+    if (session.status !== 'completed') {
+      session.status = 'completed';
+      await this.examSessionRepository.save(session);
+    }
+
+    // Get all questions for this exam
+    const questions = await this.questionRepository.find({
+      where: { exam: { id: examId } },
+      relations: ['options']
+    });
+
+    // Get all user answers for this session
+    const userAnswers = await this.userAnswerRepository.find({
+      where: {
+        exam: { id: examId },
+        session: { id: sessionId },
+        userId
+      },
+      relations: ['question']
+    });
+
+    // Evaluate each question
+    const questionResults: QuestionResultDto[] = [];
+    let correctAnswers = 0;
+
+    for (const question of questions) {
+      const userAnswer = userAnswers.find(ua => ua.question.id === question.id);
+      const isCorrect = this.evaluateAnswer(question, userAnswer?.selectedOptions || []);
+
+      if (isCorrect) {
+        correctAnswers++;
+      }
+
+      questionResults.push({
+        questionId: question.id,
+        qguid: question.qguid,
+        question: question.question,
+        type: question.type,
+        selectedOptions: userAnswer?.selectedOptions || [],
+        correctOptions: question.type === "ranking" 
+        ? question.order.map(ans => ans).map(position => question.options[position-1]?.id) //.sort((a, b) => a - b)
+        : question.correctAnswers.map(ans => ans).map(position => question.options[position-1]?.id).sort((a, b) => a - b),
+        isCorrect
+      });
+    }
+
+    const totalQuestions = questions.length;
+    const scorePercentage = (correctAnswers / totalQuestions) * 100;
+    const passed = scorePercentage >= session.exam.passingScore;
+
+    // Store the result
+    await this.examResultRepository.save({
+      exam: session.exam,
+      session,
+      userId,
+      totalQuestions,
+      correctAnswers,
+      scorePercentage,
+      passed,
+      questionResults
+    });
+
+    
+    return {
+      sessionId,
+      exam: {
+        id: session.exam.id,
+        title: session.exam.title,
+        description: session.exam.description,
+        duration: session.exam.duration,
+        passingScore: session.exam.passingScore,
+        category: {
+          cguid: "", //session.exam.category.id,
+          name: "", //session.exam.category?.name,
+          description: "", //session.exam.category?.description
+        }
+      },
+      totalQuestions,
+      correctAnswers,
+      scorePercentage,
+      passed,
+      questions: questionResults
+    };
+  }
+
+  private evaluateAnswer(question: Question, selectedOptions: number[]): boolean {
+    // Sort both arrays to compare them regardless of order
+    const sortedSelected = [...selectedOptions].sort();
+    //const sortedCorrect = [...question.correctAnswers].sort();
+    const sortedCorrect = question.correctAnswers?.map(ans => ans).map(position => question.options[position-1]?.id).sort((a, b) => a - b);
+    const rankingCorrect = question.order?.map(ans => ans).map(position => question.options[position-1]?.id);
+
+    // For single and multiple choice questions
+    if (question.type === 'single' || question.type === 'multiple') {
+      if (sortedSelected.length !== sortedCorrect.length) {
+        return false;
+      }
+      return sortedSelected.every((option, index) => option === sortedCorrect[index]);
+    }
+
+    // For true/false questions
+    if (question.type === 'true-false') {
+      return (typeof sortedSelected[0] === 'string' ? +sortedSelected[0]: sortedSelected[0])  === sortedCorrect[0];
+    }
+
+    // For ranking questions
+    if (question.type === 'ranking') {
+      return selectedOptions.every((option, index) => option === rankingCorrect[index]);
+    }
+
+    return false;
+  }
+
+
+
+  async getAllExamResults(examId: string, userId: string): Promise<ExamResultsResponseDto> {
+    const exam = await this.examRepository.findOne({
+      where: { id: examId },
+      relations: ['category']
+    });
+
+    if (!exam) {
+      throw new NotFoundException('Exam not found');
+    }
+
+    const results = await this.examResultRepository.find({
+      where: { exam: { id: examId }, userId },
+      relations: ['exam', 'session']
+    });
+
+    if (!results.length) {
+      return {
+        results: [],
+        total: 0,
+        averageScore: 0,
+        passedCount: 0,
+        failedCount: 0
+      };
+    }
+
+    const examResults = results.map(result => ({
+      sessionId: result.session.id,
+      exam: {
+        id: exam.id,
+        title: exam.title,
+        description: exam.description,
+        duration: exam.duration,
+        passingScore: exam.passingScore,
+        category: {
+          cguid: exam.category?.id || '',
+          name: exam.category?.name || '',
+          description: exam.category?.description || ''
+        }
+      },
+      totalQuestions: result.totalQuestions,
+      correctAnswers: result.correctAnswers,
+      scorePercentage: Number(result.scorePercentage),
+      passed: result.passed,
+      //questions: result.questionResults,
+      createdAt: result.createdAt
+    }));
+
+    const passedCount = results.filter(result => result.passed).length;
+    const averageScore = results.reduce((acc, curr) => acc + Number(curr.scorePercentage), 0) / results.length;
+
+    return {
+      results: examResults,
+      total: results.length,
+      averageScore: Number(averageScore.toFixed(2)),
+      passedCount,
+      failedCount: results.length - passedCount
+    };
+  }
+
+
 }
