@@ -1,3 +1,5 @@
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+
 export function CorsUtil() {
   return {
     origin: '*',
@@ -5,3 +7,12 @@ export function CorsUtil() {
     exposedHeaders: '*',
   };
 }
+
+export const corsConfig: CorsOptions = {
+  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:4200'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  credentials: true,
+  maxAge: 3600
+};

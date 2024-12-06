@@ -4,7 +4,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtService } from '@nestjs/jwt';
-import { CorsUtil } from './shared/utils/cors.util';
+import { corsConfig, CorsUtil } from './shared/utils/cors.util';
 import * as http from 'http';
 
 async function bootstrap() {
@@ -18,7 +18,7 @@ async function bootstrap() {
   //app.useGlobalGuards(new JwtAuthGuard(app.get(Reflector)));
 
   // cors
-  app.enableCors(CorsUtil());
+  app.enableCors(corsConfig); //CorsUtil()
   
   // Set the timeout value for sockets (in milliseconds)
   server.setTimeout(120000); // 120 seconds
