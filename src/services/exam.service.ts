@@ -20,6 +20,7 @@ import { ExamResultDto, QuestionResultDto } from 'src/dto/exam/exam-result.dto';
 import { ExamResult } from 'src/models/exam/exam-result.entity';
 import { ReviewQuestionResponseDto } from 'src/dto/exam/review-question-response.dto';
 import { ExamResultsResponseDto } from 'src/dto/exam/exam-results-response.dto';
+import { CategoryResultsDto, UserExamResultsDto } from 'src/dto/exam/user-exam-results.dto';
 
 @Injectable()
 export class ExamService {
@@ -1119,6 +1120,7 @@ export class ExamService {
             description: "", //existingResult.exam.category?.description
           }
         },
+        createdAt: existingResult.createdAt,
         totalQuestions: existingResult.totalQuestions,
         correctAnswers: existingResult.correctAnswers,
         scorePercentage: Number(existingResult.scorePercentage),
@@ -1190,9 +1192,9 @@ export class ExamService {
     const totalQuestions = questions.length;
     const scorePercentage = (correctAnswers / totalQuestions) * 100;
     const passed = scorePercentage >= session.exam.passingScore;
-
+    const createdAt = new Date()
     // Store the result
-    await this.examResultRepository.save({
+    const result = await this.examResultRepository.save({
       exam: session.exam,
       session,
       userId,
@@ -1200,7 +1202,8 @@ export class ExamService {
       correctAnswers,
       scorePercentage,
       passed,
-      questionResults
+      questionResults,
+      createdAt
     });
 
     
@@ -1222,7 +1225,8 @@ export class ExamService {
       correctAnswers,
       scorePercentage,
       passed,
-      questions: questionResults
+      questions: questionResults,
+      createdAt
     };
   }
 
@@ -1238,7 +1242,7 @@ export class ExamService {
       if (sortedSelected.length !== sortedCorrect.length) {
         return false;
       }
-      return sortedSelected.every((option, index) => option === sortedCorrect[index]);
+      return sortedSelected.every((option, index) => option.toString() === sortedCorrect[index].toString());
     }
 
     // For true/false questions
@@ -1315,5 +1319,92 @@ export class ExamService {
     };
   }
 
+
+  async getUserExamResults(userId: string): Promise<UserExamResultsDto> {
+    const results = await this.examResultRepository.find({
+      where: { userId },
+      relations: ['exam', 'exam.category', 'session']
+    });
+
+    if (!results.length) {
+      return {
+        categories: [],
+        overallAverageScore: 0,
+        totalExams: 0,
+        totalPassed: 0,
+        totalFailed: 0
+      };
+    }
+
+    const categoryMap = new Map<string, CategoryResultsDto>();
+
+    results.forEach(result => {
+      const category = result.exam.category;
+      if (!category) return;
+
+      const categoryId = category.id;
+      if (!categoryMap.has(categoryId)) {
+        categoryMap.set(categoryId, {
+          cguid: category.id,
+          name: category.name,
+          description: category.description,
+          results: [],
+          averageScore: 0,
+          passedCount: 0,
+          failedCount: 0
+        });
+      }
+
+      const categoryData = categoryMap.get(categoryId);
+      categoryData.results.push({
+        sessionId: result.session.id,
+        createdAt: result.createdAt,
+        exam: {
+          id: result.exam.id,
+          title: result.exam.title,
+          description: result.exam.description,
+          duration: result.exam.duration,
+          passingScore: result.exam.passingScore,
+          category: {
+            cguid: category.id,
+            name: category.name,
+            description: category.description
+          }
+        },
+        totalQuestions: result.totalQuestions,
+        correctAnswers: result.correctAnswers,
+        scorePercentage: Number(result.scorePercentage),
+        passed: result.passed,
+        questions: [], //result.questionResults
+      });
+
+      if (result.passed) {
+        categoryData.passedCount++;
+      } else {
+        categoryData.failedCount++;
+      }
+    });
+
+    // Calculate category averages
+    categoryMap.forEach(category => {
+      const totalScore = category.results.reduce((acc, result) => acc + result.scorePercentage, 0);
+      category.averageScore = Number((totalScore / category.results.length).toFixed(2));
+    });
+
+    const categories = Array.from(categoryMap.values());
+    const totalExams = results.length;
+    const totalPassed = results.filter(r => r.passed).length;
+    const overallAverageScore = Number(
+      (results.reduce((acc, r) => acc + Number(r.scorePercentage), 0) / totalExams).toFixed(2)
+    );
+
+    return {
+      categories,
+      overallAverageScore,
+      totalExams,
+      totalPassed,
+      totalFailed: totalExams - totalPassed
+    };
+  }
 
 }

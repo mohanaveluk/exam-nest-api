@@ -10,6 +10,7 @@ import { RolesService } from './services/roles.service';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { LogModule } from './modules/log.module';
 import { ExamModule } from './modules/exam.module';
+import { InquiryModule } from './modules/inquiry.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { ExamModule } from './modules/exam.module';
     ContactModule,
     EmailModule,
     LogModule,
-    ExamModule
+    ExamModule,
+    InquiryModule
   ],
   providers: [
     //CustomLoggerService,
