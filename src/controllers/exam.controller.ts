@@ -23,6 +23,7 @@ import { AnswerResponseDto } from 'src/dto/exam/answer-response.dto';
 import { ExamResultDto } from 'src/dto/exam/exam-result.dto';
 import { ReviewQuestionResponseDto } from 'src/dto/exam/review-question-response.dto';
 import { ExamResultsResponseDto } from 'src/dto/exam/exam-results-response.dto';
+import { UserExamResultsDto } from 'src/dto/exam/user-exam-results.dto';
 
 @ApiTags('Exam')
 @UseInterceptors(TimeoutInterceptor)
@@ -591,9 +592,6 @@ export class ExamController {
       );
     }
   }
-
-
-  
   
 }
 

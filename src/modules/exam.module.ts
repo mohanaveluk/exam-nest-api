@@ -11,10 +11,36 @@ import { CategoryService } from 'src/services/category.service';
 import { ExamSession } from 'src/models/exam/exam-session.entity';
 import { UserAnswer } from 'src/models/exam/user-answer.entity';
 import { ExamResult } from 'src/models/exam/exam-result.entity';
+import { UserExamController } from 'src/controllers/user-exam.controller';
+import { ExamReviewController } from 'src/controllers/exam-review.controller';
+import { ExamReviewService } from 'src/services/exam-review.service';
+import { Review } from 'src/models/reviews/review.entity';
+import { ReviewReply } from 'src/models/reviews/review-reply.entity';
+import { AuthModule } from './auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Exam, Question, Option, Category, ExamSession, UserAnswer, ExamResult])],
-  controllers: [ExamController, CategoryController],
-  providers: [ExamService, CategoryService],
+  imports: [TypeOrmModule.forFeature([
+    Exam,
+    Question,
+    Option,
+    Category,
+    ExamSession,
+    UserAnswer,
+    ExamResult,
+    Review,
+    ReviewReply]),
+    AuthModule
+  ],
+  controllers: [
+    ExamController,
+    CategoryController,
+    UserExamController,
+    ExamReviewController
+  ],
+  providers: [
+    ExamService,
+    CategoryService,
+    ExamReviewService
+  ],
 })
-export class ExamModule {}
+export class ExamModule { }

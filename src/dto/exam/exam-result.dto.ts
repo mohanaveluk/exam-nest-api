@@ -141,4 +141,11 @@ export class ExamResultDto {
     type: [QuestionResultDto]
   })
   questions?: QuestionResultDto[];
+
+  
+  @ApiProperty({
+    description: 'Date of the exam',
+    example: ""
+  })
+  createdAt: Date;
 }

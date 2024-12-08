@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { PasswordArchive } from './password-archive.entity';
-import { UserRole } from 'src/auth/enums/role.enum';
 import { RoleEntity } from './roles.entity';
+import { Inquiry } from './inquiry/inquiry.entity';
+import { InquiryResponse } from './inquiry/inquiry-response.entity';
 
 @Entity('user')
 export class User {
@@ -45,7 +46,16 @@ export class User {
   @Column({ nullable: true })
   role_id: number;
 
+  @Column({ nullable: true })
+  profileImage: string;
+
   @OneToMany(() => PasswordArchive, passwordArchive => passwordArchive.user)
   password_history: PasswordArchive[];
+
+  @OneToMany(() => Inquiry, inquiry => inquiry.user)
+  inquiries: Inquiry[];
+
+  @OneToMany(() => InquiryResponse, response => response.user)
+  responses: InquiryResponse[];
   
 }

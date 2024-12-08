@@ -129,4 +129,16 @@ export class AuthService {
 
     return { message: 'Password updated successfully' };
   }
+
+  async getUserInfo(userId: string){
+    const user = await this.userRepository.findOne({
+      where: { id: parseInt(userId) },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
+  }
 }
