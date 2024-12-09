@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, OneToMany } from 'typeorm';
 import { Inquiry } from './inquiry.entity';
 import { User } from '../user.entity';
+import { FollowUp } from './follow-up.entity';
 
 @Entity('inquiry_response_tbl')
 export class InquiryResponse {
@@ -18,5 +19,11 @@ export class InquiryResponse {
 
   @CreateDateColumn()
   createdAt: Date;
+  
+  @OneToMany(() => FollowUp, followUp => followUp.response)
+  followUps: FollowUp[];
+
+  @ManyToOne(() => FollowUp, followUp => followUp.responses, { nullable: true })
+  followUp: FollowUp;
 
 }

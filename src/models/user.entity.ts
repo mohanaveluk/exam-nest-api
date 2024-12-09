@@ -3,6 +3,7 @@ import { PasswordArchive } from './password-archive.entity';
 import { RoleEntity } from './roles.entity';
 import { Inquiry } from './inquiry/inquiry.entity';
 import { InquiryResponse } from './inquiry/inquiry-response.entity';
+import { FollowUp } from './inquiry/follow-up.entity';
 
 @Entity('user')
 export class User {
@@ -58,4 +59,6 @@ export class User {
   @OneToMany(() => InquiryResponse, response => response.user)
   responses: InquiryResponse[];
   
+  @OneToMany(() => FollowUp, followUp => followUp.user)
+  followUps: FollowUp[];
 }

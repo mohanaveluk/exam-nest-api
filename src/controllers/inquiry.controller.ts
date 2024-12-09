@@ -12,6 +12,8 @@ import { AuthorizationGuard } from 'src/guards/jwt-authorization.guard';
 import { InquiryResponse } from 'src/models/inquiry/inquiry-response.entity';
 import { Inquiry } from 'src/models/inquiry/inquiry.entity';
 import { InquiryService } from 'src/services/inquiry.service';
+import { CreateFollowUpDto } from 'src/dto/inquiry/create-follow-up.dto';
+import { FollowUp } from 'src/models/inquiry/follow-up.entity';
 
 
 @ApiTags('Inquiries')
@@ -158,4 +160,49 @@ export class InquiryController {
       );
     }
   }
+  //follow-up related questions
+  @Post('responses/:responseId/follow-up')
+  @AllowRoles(UserRole.User, UserRole.Admin)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Create a follow-up question' })
+  @SwaggerResponse({ status: 201, description: 'Follow-up question created successfully' })
+  async createFollowUp(
+    @Param('responseId') responseId: string,
+    @Body() createFollowUpDto: CreateFollowUpDto,
+    @User('id') userId: any
+  ): Promise<ApiResponse<FollowUp>> {
+    try {
+      const tempUserId = typeof userId === 'object' ? `${userId.id}` : `${userId}`;
+      const followUp = await this.inquiryService.createFollowUp(responseId, createFollowUpDto, tempUserId);
+      return new ApiResponse(true, 'Follow-up question created successfully', followUp);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to create follow-up question', null, error.message),
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
+  @Post('follow-up/:followUpId/responses')
+  @AllowRoles(UserRole.Admin)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Respond to a follow-up question' })
+  @SwaggerResponse({ status: 201, description: 'Follow-up response added successfully' })
+  async respondToFollowUp(
+    @Param('followUpId') followUpId: string,
+    @Body() createResponseDto: CreateResponseDto,
+    @User('id') adminId: any
+  ): Promise<ApiResponse<InquiryResponse>> {
+    try {
+      const tempAdminId = typeof adminId === 'object' ? `${adminId.id}` : `${adminId}`;
+      const response = await this.inquiryService.respondToFollowUp(followUpId, createResponseDto, tempAdminId);
+      return new ApiResponse(true, 'Follow-up response added successfully', response);
+    } catch (error) {
+      throw new HttpException(
+        new ApiResponse(false, 'Failed to add follow-up response', null, error.message),
+        HttpStatus.BAD_REQUEST
+      );
+    }
+  }
+
 }
