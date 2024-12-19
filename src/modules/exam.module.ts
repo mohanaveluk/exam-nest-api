@@ -17,10 +17,22 @@ import { ExamReviewService } from 'src/services/exam-review.service';
 import { Review } from 'src/models/reviews/review.entity';
 import { ReviewReply } from 'src/models/reviews/review-reply.entity';
 import { AuthModule } from './auth.module';
+import { TE_ExamController } from 'src/controllers/te-exam.controller';
+import { TE_QuestionController } from 'src/controllers/te-question.controller';
+import { TE_ExamService } from 'src/services/te-exam.service';
+import { TE_QuestionService } from 'src/services/te-question.service';
+import { TE_Exam } from 'src/models/trial-exam/te-exam.entity';
+import { TE_Question } from 'src/models/trial-exam/te-question.entity';
+import { TE_Option } from 'src/models/trial-exam/te-option.entity';
+import { TE_QuestionUpdateService } from 'src/services/te-question-update.service';
+import { TE_OptionService } from 'src/services/te-option.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([
     Exam,
+    TE_Exam,
+    TE_Question,
+    TE_Option,
     Question,
     Option,
     Category,
@@ -33,14 +45,20 @@ import { AuthModule } from './auth.module';
   ],
   controllers: [
     ExamController,
+    TE_ExamController,
     CategoryController,
     UserExamController,
-    ExamReviewController
+    ExamReviewController,
+    TE_QuestionController
   ],
   providers: [
     ExamService,
+    TE_ExamService,
     CategoryService,
-    ExamReviewService
+    ExamReviewService,
+    TE_QuestionService,
+    TE_QuestionUpdateService,
+    TE_OptionService
   ],
 })
 export class ExamModule { }

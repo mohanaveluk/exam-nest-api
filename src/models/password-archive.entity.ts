@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn } from 'typeorm';
 import { User } from './user.entity';
 
-@Entity('password_archive')
+@Entity('password_archive_tbl')
 export class PasswordArchive {
   @PrimaryGeneratedColumn()
   id: number;

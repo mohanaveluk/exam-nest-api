@@ -1407,4 +1407,13 @@ export class ExamService {
     };
   }
 
+  
+  async findOne(id: string): Promise<Exam> {
+    const exam = await this.examRepository.findOne({ where: { id } });
+    if (!exam) {
+      throw new NotFoundException(`Exam with Id ${id} not found`);
+    }
+    return exam;
+  }
+
 }
