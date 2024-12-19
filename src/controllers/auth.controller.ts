@@ -80,4 +80,15 @@ export class AuthController {
   updatePassword(@Request() req, @Body() updatePasswordDto: UpdatePasswordDto) {
     return this.authService.updatePassword(req.user.id, updatePasswordDto);
   }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'User logout' })
+  @ApiResponse({ status: 200, description: 'Logout successful' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  logout(@Request() req) {
+    return this.authService.logout(req.user.id);
+  }
+  
 }

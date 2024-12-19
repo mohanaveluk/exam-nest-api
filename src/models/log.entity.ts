@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity('log_tbl')
 export class Log {
   @PrimaryGeneratedColumn()
   id: number;

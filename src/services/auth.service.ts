@@ -11,6 +11,7 @@ import { PasswordArchive } from '../models/password-archive.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { DateService } from './date.service';
 import { RoleEntity } from 'src/models/roles.entity';
+import { TokenService } from './token.service';
 
 
 @Injectable()
@@ -23,7 +24,8 @@ export class AuthService {
     @InjectRepository(RoleEntity)
     private rolesRepository: Repository<RoleEntity>,    
     private jwtService: JwtService,
-    private dateService: DateService
+    private dateService: DateService,
+    private tokenService: TokenService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -56,8 +58,11 @@ export class AuthService {
 
       });
 
-      await this.userRepository.save(user);
-      return { message: 'User registered successfully' };
+      const savedUser = await this.userRepository.save(user);
+      const tokens = await this.tokenService.generateTokens(savedUser);
+
+      //await this.userRepository.save(user);
+      return { message: 'User registered successfully', ...tokens };
     } catch (err) {
       throw err;
     }
@@ -77,7 +82,7 @@ export class AuthService {
       throw new UnauthorizedException('Oops, Password is incorrect.');
     }
 
-    const payload = { 
+    /*const payload = { 
       sub: user.uguid, 
       email: user.email,
       firstName: user.first_name,
@@ -93,7 +98,10 @@ export class AuthService {
         firstName: user.first_name,
         lastName: user.last_name,
       }      
-   };
+   };*/
+
+   return this.tokenService.generateTokens(user);
+
   }
 
   async updatePassword(userId: number, updatePasswordDto: UpdatePasswordDto) {
@@ -140,5 +148,10 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async logout(userId: number) {
+    await this.tokenService.revokeAllUserRefreshTokens(userId);
+    return { message: 'Logged out successfully' };
   }
 }

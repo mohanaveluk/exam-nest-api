@@ -12,11 +12,14 @@ import * as dotenv from 'dotenv';
 import { AuthorizationGuard } from 'src/guards/jwt-authorization.guard';
 import { DateService } from 'src/services/date.service';
 import { RoleEntity } from 'src/models/roles.entity';
+import { TokenController } from 'src/controllers/token.controller';
+import { TokenService } from 'src/services/token.service';
+import { RefreshToken } from 'src/models/user/refresh-token.entity';
 dotenv.config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PasswordArchive, RoleEntity]),
+    TypeOrmModule.forFeature([User, RefreshToken, PasswordArchive, RoleEntity]),
     PassportModule.register({ defaultStrategy: 'jwt' ,
       session: false}),
     
@@ -38,13 +41,14 @@ dotenv.config();
     // }),
 
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, TokenController],
   providers: [
     AuthService,
     JwtStrategy,
     JwtAuthGuard,
     AuthorizationGuard,
-    DateService
+    DateService,
+    TokenService
     // {
     //   provide: APP_GUARD,
     //   useClass: JwtAuthGuard,
@@ -57,6 +61,6 @@ dotenv.config();
       inject: [Reflector, JwtService]
     }*/
   ],
-  exports: [AuthService,  PassportModule, DateService],
+  exports: [AuthService,  PassportModule, DateService, TokenService],
 })
 export class AuthModule { }
