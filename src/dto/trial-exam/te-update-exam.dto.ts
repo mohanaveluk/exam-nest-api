@@ -1,6 +1,8 @@
 import { IsString, IsNumber, Min, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
+
+
 export class TE_UpdateExamDto {
   @ApiProperty({ required: false })
   @IsOptional()
@@ -28,4 +30,13 @@ export class TE_UpdateExamDto {
   @IsNumber()
   @Min(0)
   passingScore?: number;
+}
+
+export class TE_UpdateExam{
+  @ApiProperty({ required: false })
+  exam: TE_UpdateExamDto
+  
+  @ApiProperty({ required: false })
+  questions: any[]
+  
 }

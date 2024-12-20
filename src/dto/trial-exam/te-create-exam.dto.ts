@@ -24,3 +24,12 @@ export class TE_CreateExamDto {
   @Min(0)
   passingScore: number;
 }
+
+export class TE_CreateExam{
+  @ApiProperty({ required: false })
+  exam: TE_CreateExamDto
+  
+  @ApiProperty({ required: false })
+  questions: any[]
+  
+}

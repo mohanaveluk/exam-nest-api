@@ -3,9 +3,9 @@ import { ApiBearerAuth, ApiOperation, ApiTags, ApiResponse as SwaggerResponse} f
 import { AllowRoles } from 'src/auth/decorators/roles.decorator';
 import { UserRole } from 'src/auth/enums/role.enum';
 import { ApiResponse } from 'src/dto/exam/api-response.dto';
-import { TE_CreateExamDto } from 'src/dto/trial-exam/te-create-exam.dto';
+import { TE_CreateExam, TE_CreateExamDto } from 'src/dto/trial-exam/te-create-exam.dto';
 import { TE_CreateQuestionDto } from 'src/dto/trial-exam/te-create-question.dto';
-import { TE_UpdateExamDto } from 'src/dto/trial-exam/te-update-exam.dto';
+import { TE_UpdateExam, TE_UpdateExamDto } from 'src/dto/trial-exam/te-update-exam.dto';
 import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 import { AuthorizationGuard } from 'src/guards/jwt-authorization.guard';
 import { TE_Exam } from 'src/models/trial-exam/te-exam.entity';
@@ -23,9 +23,9 @@ export class TE_ExamController {
   @UseGuards(JwtAuthGuard, AuthorizationGuard)
   @ApiOperation({ summary: 'Create a new exam' })
   @SwaggerResponse({ status: 201, description: 'Exam created successfully' })
-  async create(@Body() createExamDto: TE_CreateExamDto, @Body('questions') questions?: TE_CreateQuestionDto[]): Promise<ApiResponse<TE_Exam>> {
+  async create(@Body() updateReq: TE_CreateExam, @Body('questions') questions?: TE_CreateQuestionDto[]): Promise<ApiResponse<TE_Exam>> {
       try {
-          const exam = await this.examService.create(createExamDto, questions);
+          const exam = await this.examService.create(updateReq?.exam, questions);
           return new ApiResponse(true, 'Exam created successfully', exam);
       } catch (error) {
           throw new HttpException(
@@ -41,9 +41,9 @@ export class TE_ExamController {
   @UseGuards(JwtAuthGuard, AuthorizationGuard)
   @ApiOperation({ summary: 'Update an existing exam' })
   @SwaggerResponse({ status: 200, description: 'Exam updated successfully' })
-  async update(@Param('id') id: string, @Body() updateExamDto: TE_UpdateExamDto, @Body('questions') questions?: any[]): Promise<ApiResponse<TE_Exam>> {
+  async update(@Param('id') id: string, @Body() updateReq: TE_UpdateExam, @Body('questions') questions?: any[]): Promise<ApiResponse<TE_Exam>> {
     try {
-        const exam = await this.examService.update(id, updateExamDto, questions);
+        const exam = await this.examService.update(id, updateReq?.exam, questions);
         return new ApiResponse(true, 'Exam updated successfully', exam);
     } catch (error) {
         throw new HttpException(
