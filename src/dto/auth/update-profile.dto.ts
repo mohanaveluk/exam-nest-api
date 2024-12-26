@@ -45,6 +45,14 @@ export class UpdateProfileDto {
   major?: string;
 
   @ApiProperty({
+    example: '******',
+    description: 'User password',
+  })
+  @IsOptional()
+  @MinLength(8)
+  password?: string;
+
+  @ApiProperty({
     example: 'image url',
     description: 'user profile image link/url',
   })

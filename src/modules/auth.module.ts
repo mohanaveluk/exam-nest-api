@@ -18,6 +18,7 @@ import { RefreshToken } from 'src/models/user/refresh-token.entity';
 import { StorageService } from 'src/services/storage.service';
 import { OTC } from 'src/models/user/otc.entity';
 import { EmailService } from 'src/email/email.service';
+import { CommonService } from 'src/services/common.service';
 dotenv.config();
 
 @Module({
@@ -53,7 +54,8 @@ dotenv.config();
     DateService,
     TokenService,
     StorageService,
-    EmailService
+    EmailService,
+    CommonService
     // {
     //   provide: APP_GUARD,
     //   useClass: JwtAuthGuard,

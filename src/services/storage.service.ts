@@ -4,16 +4,21 @@ import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class StorageService {
+  private storage1: Storage;
   private storage: Storage;
   private bucket: string;
 
   constructor(private configService: ConfigService) {
-    this.storage = new Storage({
+    this.storage1 = new Storage({
       projectId: this.configService.get('GOOGLE_CLOUD_PROJECT_ID'),
       credentials: {
         client_email: this.configService.get('GOOGLE_CLOUD_CLIENT_EMAIL'),
         private_key: this.configService.get('GOOGLE_CLOUD_PRIVATE_KEY').replace(/\\n/g, '\n'),
       },
+    });
+    this.storage = new Storage({
+        keyFilename: './api-node-docker-d8462fdb3f6d.json',
+        projectId: "thematic-fort-313314"
     });
     this.bucket = this.configService.get('GOOGLE_CLOUD_BUCKET');
   }

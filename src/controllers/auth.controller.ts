@@ -9,7 +9,8 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   Body,
-  Put
+  Put,
+  Get
 } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { RegisterDto } from '../dto/auth/register.dto';
@@ -27,6 +28,8 @@ import { ValidateOTCDto } from 'src/dto/auth/validate-otc.dto';
 import { MobileLoginDto } from 'src/dto/auth/mobile-login.dto';
 import { RequestPasswordResetDto } from 'src/dto/auth/request-password-reset.dto';
 import { ResetPasswordDto } from 'src/dto/auth/reset-password.dto';
+import { VerifyEmailDto } from 'src/dto/auth/verify-email.dto';
+import { ResendOTCDto } from 'src/dto/auth/resend-otc.dto';
 
 
 @ApiTags('Authentication')
@@ -76,7 +79,15 @@ export class AuthController {
   }
 
 
-  
+  @Public()
+  @Post('verify-email')
+  @ApiOperation({ summary: 'Verify email address' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired verification code' })
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.authService.verifyEmail(verifyEmailDto);
+  }
+
   @Public()
   @Post('login')
   @ApiOperation({ summary: 'User login' })
@@ -131,6 +142,14 @@ export class AuthController {
   }
 
 
+  @Post('resendotc')
+  @ApiOperation({ summary: 'Send OTC to mobile number' })
+  @ApiResponse({ status: 200, description: 'OTC sent successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - invalid token' })
+  async resendVerificationCode(@Body() resendOTCDto: ResendOTCDto) {
+    return this.authService.resendVerificationCode(resendOTCDto);
+  }
+
   
   @Post('update-password')
   @UseGuards(JwtAuthGuard)
@@ -152,6 +171,21 @@ export class AuthController {
     return this.authService.logout(req.user.id);
   }
   
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get user information' })
+  @ApiResponse({ status: 200, description: 'User information retrieved successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @UseInterceptors(FileInterceptor('file'))
+  async userProfile(
+    @Request() req: any,
+  ) {
+    return this.authService.getUserInfo(req.user.id);
+  }
+
+
   @Post('profile/image')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')

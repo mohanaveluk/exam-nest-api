@@ -29,6 +29,15 @@ export class User {
   @Column({nullable: true})
   major: string;
 
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  @Column({ nullable: true })
+  verificationCode: string;
+
+  @Column({ nullable: true })
+  verificationCodeExpiry: Date;
+  
   @Column({ type: 'datetime' })
   created_at: Date
   

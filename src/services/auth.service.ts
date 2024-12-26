@@ -21,6 +21,10 @@ import { addMinutes } from 'date-fns';
 import { ResetPasswordDto } from 'src/dto/auth/reset-password.dto';
 import { passwordResetTemplate } from 'src/email/templates/password-reset.template';
 import { EmailService } from 'src/email/email.service';
+import { verifyEmailTemplate } from 'src/email/templates/verify-email-template';
+import { VerifyEmailDto } from 'src/dto/auth/verify-email.dto';
+import { CommonService } from './common.service';
+import { ResendOTCDto } from 'src/dto/auth/resend-otc.dto';
 
 @Injectable()
 export class AuthService {
@@ -38,6 +42,7 @@ export class AuthService {
     private tokenService: TokenService,
     private storageService: StorageService,
     private emailService: EmailService,
+    private commonService: CommonService,
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -60,6 +65,9 @@ export class AuthService {
       }
 
       const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+      const verificationCode = this.generateOTC();
+      const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+
       const user = this.userRepository.create({
         ...registerDto,
         password: hashedPassword,
@@ -67,14 +75,24 @@ export class AuthService {
         role,
         role_id: role.id,
         created_at: new Date(await this.dateService.getCurrentDateTime()),
-
+        verificationCode,
+        verificationCodeExpiry,
+        isEmailVerified: false
       });
 
       const savedUser = await this.userRepository.save(user);
       const tokens = await this.tokenService.generateTokens(savedUser);
 
+      // Send verification email
+      await this.emailService.sendEmail({
+        to: user.email,
+        subject: 'Verify Your Email Address',
+        html: verifyEmailTemplate(verificationCode),
+      });
+
+
       //await this.userRepository.save(user);
-      return { message: 'User registered successfully', ...tokens };
+      return { message: 'User registered successfully. Please check your email for verification code.' };
     } catch (err) {
       throw err;
     }
@@ -100,15 +118,48 @@ export class AuthService {
         }
       }
 
+      if(!this.commonService.isNullOrEmpty(updateProfileDto.password)){
+        const hashedPassword = await bcrypt.hash(updateProfileDto.password, 10);
+        updateProfileDto.password = hashedPassword;
+      }
+
       // Update user properties
       Object.assign(user, updateProfileDto);
       user.updated_at = new Date();
 
       await this.userRepository.save(user);
-      return { message: 'Profile updated successfully' };
+      return { message: 'Profile updated successfully', profileImage: user.profileImage };
     } catch (error) {
       throw error;
     }
+  }
+
+  
+  async verifyEmail(verifyEmailDto: VerifyEmailDto) {
+    const user = await this.userRepository.findOne({
+      where: { email: verifyEmailDto.email }
+    });
+
+    if (!user) {
+      throw new BadRequestException('Invalid email address');
+    }
+
+    if (user.isEmailVerified) {
+      return { message: 'Email already verified' };
+    }
+
+    if (!user.verificationCode || 
+        user.verificationCode !== verifyEmailDto.code ||
+        new Date() > user.verificationCodeExpiry) {
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+
+    user.isEmailVerified = true;
+    user.verificationCode = null;
+    user.verificationCodeExpiry = null;
+    await this.userRepository.save(user);
+
+    return { message: 'Email verified successfully' };
   }
 
   
@@ -119,6 +170,27 @@ export class AuthService {
 
     if (!user) {
       throw new UnauthorizedException('Oops, Invalid User Id.');
+    }
+
+    if (!user.isEmailVerified) {
+      // Generate new verification code if needed
+      if (!user.verificationCode || new Date() > user.verificationCodeExpiry) {
+        const verificationCode = this.generateOTC();
+        const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000);
+        
+        user.verificationCode = verificationCode;
+        user.verificationCodeExpiry = verificationCodeExpiry;
+        await this.userRepository.save(user);
+        
+        // Send verification email
+        await this.emailService.sendEmail({
+          to: user.email,
+          subject: 'Verify Your Email Address',
+          html: verifyEmailTemplate(verificationCode),
+        });
+      }
+
+      throw new UnauthorizedException('Please verify your email address. A verification code has been sent to your email.');
     }
 
     const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
@@ -191,6 +263,7 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
+    user.password = "";
     return user;
   }
 
@@ -390,4 +463,34 @@ export class AuthService {
     }
   }
 
+  async resendVerificationCode(resendOTCDto: ResendOTCDto): Promise<{ message: string }>{
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email: resendOTCDto.email },
+      });
+
+      if (!user) {
+        // Return success even if user doesn't exist (security best practice)
+        return { message: 'If your email is registered, you will receive verification code' };
+      }
+      const verificationCode = this.generateOTC();
+      const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000);
+      
+      user.verificationCode = verificationCode;
+      user.verificationCodeExpiry = verificationCodeExpiry;
+      await this.userRepository.save(user);
+      
+      // Send verification email
+      await this.emailService.sendEmail({
+        to: user.email,
+        subject: 'Verify Your Email Address',
+        html: verifyEmailTemplate(verificationCode),
+      });
+
+      return { message: 'The verification code has been sent again. Please check your email for verification code' };
+
+    } catch (error) {
+      throw error;
+    }
+  }
 }

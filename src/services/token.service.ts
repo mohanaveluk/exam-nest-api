@@ -40,6 +40,7 @@ export class TokenService {
         email: user.email,
         firstName: user.first_name,
         lastName: user.last_name,
+        avatar: user.profileImage
       } 
     };
   }
