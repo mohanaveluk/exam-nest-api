@@ -11,6 +11,7 @@ import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 import { LogModule } from './modules/log.module';
 import { ExamModule } from './modules/exam.module';
 import { InquiryModule } from './modules/inquiry.module';
+import { GroupModule } from './modules/group.module';
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { InquiryModule } from './modules/inquiry.module';
     EmailModule,
     LogModule,
     ExamModule,
-    InquiryModule
+    InquiryModule,
+    GroupModule
   ],
   providers: [
     //CustomLoggerService,

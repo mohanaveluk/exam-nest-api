@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -25,6 +25,8 @@ import { verifyEmailTemplate } from 'src/email/templates/verify-email-template';
 import { VerifyEmailDto } from 'src/dto/auth/verify-email.dto';
 import { CommonService } from './common.service';
 import { ResendOTCDto } from 'src/dto/auth/resend-otc.dto';
+import { Permission } from 'src/models/auth/permission.entity';
+import { UserResponseDto } from 'src/dto/auth/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -162,6 +164,26 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
+  async getAllUsers(): Promise<UserResponseDto[]> {
+    const users =  await this.userRepository.find({
+        where: { is_active: 1, isEmailVerified: true },
+    });
+
+    let userResponses = [];
+    users.forEach(user => {
+      const detail = {
+        uguid: user.uguid,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        major: user.major,
+        mobile: user.mobile,
+        profileImage: user.profileImage
+      };
+      userResponses.push(detail);
+    });
+    return userResponses;
+  }
   
   async login(loginDto: LoginDto) {
     const user = await this.userRepository.findOne({
@@ -493,4 +515,38 @@ export class AuthService {
       throw error;
     }
   }
+
+  async getUserPermissions(userId: string): Promise<Permission[]> {
+    try {
+
+      const userEntity = await this.userRepository.findOne({
+        where: { uguid: userId },
+      });
+
+      const user = await this.userRepository.findOne({
+        where: { uguid: userId },
+        relations: ['groups', 'groups.permissions'] //, 'groups.permissions'
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      // Collect unique permissions from all user groups
+      const permissions = new Set<Permission>();
+      user.groups.forEach(group => {
+        group.permissions.forEach(permission => {
+          permissions.add(permission);
+        });
+      });
+
+      return Array.from(permissions);
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+
+  }
+
+  
 }
