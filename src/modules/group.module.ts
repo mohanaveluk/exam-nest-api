@@ -10,7 +10,7 @@ import { GroupService } from 'src/services/group.service';
 
 @Module({
     imports: [
-      TypeOrmModule.forFeature([Group, Permission, User])
+      TypeOrmModule.forFeature([Group, Permission, User]) //, GroupPermission
     ],
     controllers: [GroupController, PermissionController],
     providers: [GroupService, PermissionService],

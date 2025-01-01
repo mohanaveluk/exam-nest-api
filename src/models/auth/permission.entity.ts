@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToMany, OneToMany, JoinTable } from 'typeorm';
 import { Group } from './group.entity';
+//import { GroupPermission } from './group-permission.entity';
 
 @Entity('permissions_tbl')
 export class Permission {
@@ -15,6 +16,22 @@ export class Permission {
   @Column()
   description: string;
 
-  @ManyToMany(() => Group)
+  @ManyToMany(() => Group, group => group.permissions)
+  @JoinTable({
+    name: 'group_permissions_tbl',
+    joinColumn: {
+      name: 'permission_id',
+      referencedColumnName: 'id'
+    },
+    inverseJoinColumn: {
+      name: 'group_id',
+      referencedColumnName: 'id'
+    }
+  })
   groups: Group[];
+  
+  //@ManyToMany(() => Group)
+  //groups: Group[];
+  // @OneToMany(() => GroupPermission, groupPermission => groupPermission.permission)
+  // groupPermissions: GroupPermission[];  
 }

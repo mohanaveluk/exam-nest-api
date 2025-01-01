@@ -1,6 +1,7 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
 import { User } from '../user.entity';
 import { Permission } from './permission.entity';
+//import { GroupPermission } from './group-permission.entity';
 
 
 @Entity('groups_tbl')
@@ -32,7 +33,10 @@ export class Group {
     })
     permissions: Permission[];
   
+    // @OneToMany(() => GroupPermission, groupPermission => groupPermission.group)
+    // groupPermissions: GroupPermission[];
 
+    
 //   @ManyToMany(() => User)
 //   @JoinTable()
 //   users: User[];
