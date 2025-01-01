@@ -10,7 +10,9 @@ import {
   FileTypeValidator,
   Body,
   Put,
-  Get
+  Get,
+  HttpException,
+  HttpStatus
 } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { RegisterDto } from '../dto/auth/register.dto';
@@ -30,6 +32,9 @@ import { RequestPasswordResetDto } from 'src/dto/auth/request-password-reset.dto
 import { ResetPasswordDto } from 'src/dto/auth/reset-password.dto';
 import { VerifyEmailDto } from 'src/dto/auth/verify-email.dto';
 import { ResendOTCDto } from 'src/dto/auth/resend-otc.dto';
+import { Permission } from 'src/models/auth/permission.entity';
+import { UserResponseDto } from 'src/dto/auth/user-response.dto';
+import { GenericApiResponse } from 'src/dto/common/generic-api-response.dto';
 
 
 @ApiTags('Authentication')
@@ -87,6 +92,23 @@ export class AuthController {
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     return this.authService.verifyEmail(verifyEmailDto);
   }
+
+
+  @Get()
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ status: 200, description: 'List of all users' })
+  async getAllUsers(): Promise<GenericApiResponse<UserResponseDto[]>> {
+    try {
+      const users = await this.authService.getAllUsers();
+      return new GenericApiResponse(true, 'Users retrieved successfully', users);
+    } catch (error) {
+      throw new HttpException(
+        new GenericApiResponse(false, 'Failed to retrieve categories', null, error.message),
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
 
   @Public()
   @Post('login')
@@ -226,5 +248,15 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Bad request - invalid or expired token' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Get('permissions')
+  @ApiBearerAuth('JWT-auth')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get user permissions' })
+  @ApiResponse({ status: 200, description: 'Permission retrieved successfully' })
+  @ApiResponse({ status: 400, description: 'Bad request - invalid or expired token' })
+  async getUserPermissions(@Request() req): Promise<Permission[]> {
+    return this.authService.getUserPermissions(req.user.uguid);
   }
 }

@@ -1,10 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, ManyToOne, JoinColumn, ManyToMany, JoinTable } from 'typeorm';
 import { PasswordArchive } from './password-archive.entity';
 import { RoleEntity } from './roles.entity';
 import { Inquiry } from './inquiry/inquiry.entity';
 import { InquiryResponse } from './inquiry/inquiry-response.entity';
 import { FollowUp } from './inquiry/follow-up.entity';
 import { RefreshToken } from './user/refresh-token.entity';
+import { Group } from './auth/group.entity';
 
 @Entity('user')
 export class User {
@@ -74,4 +75,18 @@ export class User {
 
   @OneToMany(() => RefreshToken, refreshToken => refreshToken.user)
   refreshTokens: RefreshToken[];
+
+  @ManyToMany(() => Group)
+  @JoinTable({
+    name: 'user_groups_tbl',
+    joinColumn: {
+      name: 'user_id',
+      referencedColumnName: 'id'
+    },
+    inverseJoinColumn: {
+      name: 'group_id',
+      referencedColumnName: 'id'
+    }
+  })
+  groups: Group[];
 }

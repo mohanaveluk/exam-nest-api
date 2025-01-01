@@ -8,7 +8,7 @@ export class Log {
   @Column()
   level: string;
 
-  @Column()
+  @Column({type: 'text'})
   message: string;
 
   @Column({type: 'text', nullable: true })

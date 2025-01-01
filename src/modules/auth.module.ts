@@ -19,11 +19,17 @@ import { StorageService } from 'src/services/storage.service';
 import { OTC } from 'src/models/user/otc.entity';
 import { EmailService } from 'src/email/email.service';
 import { CommonService } from 'src/services/common.service';
+import { UserGroupsController } from 'src/controllers/user-groups.controller';
+import { UsersController } from 'src/controllers/users.controller';
+import { UserGroupsService } from 'src/services/user-groups.service';
+import { UsersService } from 'src/services/users.service';
+import { Permission } from 'src/models/auth/permission.entity';
+import { Group } from 'src/models/auth/group.entity';
 dotenv.config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken, PasswordArchive, RoleEntity, OTC]),
+    TypeOrmModule.forFeature([User, RefreshToken, PasswordArchive, RoleEntity, OTC, Group, Permission]),
     PassportModule.register({ defaultStrategy: 'jwt' ,
       session: false}),
     
@@ -45,7 +51,12 @@ dotenv.config();
     // }),
 
   ],
-  controllers: [AuthController, TokenController],
+  controllers: [
+    AuthController, 
+    TokenController, 
+    UserGroupsController,
+    UsersController
+  ],
   providers: [
     AuthService,
     JwtStrategy,
@@ -55,7 +66,9 @@ dotenv.config();
     TokenService,
     StorageService,
     EmailService,
-    CommonService
+    CommonService,
+    UserGroupsService,
+    UsersService
     // {
     //   provide: APP_GUARD,
     //   useClass: JwtAuthGuard,
