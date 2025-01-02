@@ -6,6 +6,8 @@ import { TE_Exam } from 'src/models/trial-exam/te-exam.entity';
 import { TE_Option } from 'src/models/trial-exam/te-option.entity';
 import { TE_Question } from 'src/models/trial-exam/te-question.entity';
 import { Repository } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+
 
 
 @Injectable()
@@ -20,7 +22,18 @@ export class TE_ExamService {
   ) {}
 
   async create(createExamDto: TE_CreateExamDto, questions?: any[]): Promise<TE_Exam> {
-    const exam = this.examRepository.create(createExamDto);
+    //const exam = this.examRepository.create(createExamDto);
+
+    const exam = new TE_Exam();
+    exam.id = uuidv4();
+    exam.title = createExamDto.title;
+    exam.subject = createExamDto.subject;
+    exam.description = createExamDto.description;
+    exam.title = createExamDto.title;
+    exam.passingScore = createExamDto.passingScore;
+    exam.totalQuestions = createExamDto.totalQuestions;
+    exam.createdAt = new Date();
+    
     const savedExam = await this.examRepository.save(exam);
 
     // Handle questions if provided
@@ -36,6 +49,7 @@ export class TE_ExamService {
     
     // Update only the provided fields
     Object.assign(exam, updateExamDto);
+    exam.updatedAt = new Date();
     const updatedExam = await this.examRepository.save(exam);
 
     // Handle questions if provided
