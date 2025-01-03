@@ -13,7 +13,7 @@ export class StorageService {
       projectId: this.configService.get('GOOGLE_CLOUD_PROJECT_ID'),
       credentials: {
         client_email: this.configService.get('GOOGLE_CLOUD_CLIENT_EMAIL'),
-        private_key: this.configService.get('GOOGLE_CLOUD_PRIVATE_KEY').replace(/\\n/g, '\n'),
+        private_key: this.configService.get('GOOGLE_CLOUD_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
       },
     });
     this.storage = new Storage({
