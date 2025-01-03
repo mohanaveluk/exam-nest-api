@@ -1,6 +1,6 @@
-# Use the official Node.js image as the base image
-FROM node:14
-ENV NODE_ENV=production
+# Stage 1: Build the application
+FROM node:14 AS builder
+
 # Create and set the working directory
 WORKDIR /app
 
@@ -16,8 +16,25 @@ COPY . .
 # Build the NestJS application
 RUN npm run build
 
+# Stage 2: Create the production image
+FROM node:14-alpine
+
+# Create and set the working directory
+WORKDIR /app
+
+# Copy only the necessary files from the build stage
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package*.json ./
+
+# Install only production dependencies
+RUN npm install --only=production
+
+# Add a non-root user and switch to it
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 # Expose the port the app runs on
-EXPOSE 8080
+EXPOSE 3000
 
 # Define the command to run the application
-CMD ["npm", "run", "start"]
+CMD ["node", "dist/main"]
