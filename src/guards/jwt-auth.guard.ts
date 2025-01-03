@@ -68,7 +68,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   private extractTokenFromHeader(request: Request| any): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    const authorizationHeader = request.headers.authorization;
+    const [type, token] = authorizationHeader ? authorizationHeader.split(' ') : [];
+
+    //const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }
 

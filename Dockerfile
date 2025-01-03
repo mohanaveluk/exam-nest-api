@@ -2,7 +2,7 @@
 FROM node:14
 ENV NODE_ENV=production
 # Create and set the working directory
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
