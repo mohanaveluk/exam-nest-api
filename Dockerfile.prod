@@ -44,6 +44,12 @@ USER appuser
 # Add a debugging step
 RUN ls -l /app && ls -l /app/logs
 
+# Set production environment
+ENV NODE_ENV=production
+
+# The port that Cloud Run will use
+ENV PORT=8080
+
 # Expose the port the app runs on
 EXPOSE 8080
 
