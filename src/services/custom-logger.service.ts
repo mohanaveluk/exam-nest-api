@@ -34,7 +34,7 @@ const logFormat = winston.format.printf(({ timestamp, level, message, context })
             ),
           }),
           new winston.transports.DailyRotateFile({
-            dirname: 'logs',
+            dirname: '/app/logs',
             filename: 'application-%DATE%.log',
             datePattern: 'YYYY-MM-DD',
             zippedArchive: true,
@@ -43,7 +43,7 @@ const logFormat = winston.format.printf(({ timestamp, level, message, context })
             level: 'debug',
           }),
           new winston.transports.DailyRotateFile({
-            dirname: 'logs',
+            dirname: '/app/logs',
             filename: 'error-%DATE%.log',
             datePattern: 'YYYY-MM-DD',
             zippedArchive: true,

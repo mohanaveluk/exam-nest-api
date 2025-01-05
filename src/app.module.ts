@@ -31,7 +31,7 @@ import { adminConfig, databaseConfig, googleCloudConfig, jwtConfig, smtpConfig }
           database: configService.get('database.database'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           synchronize: process.env.NODE_ENV !== 'production',
-          logging: false,
+          logging: true,
           logger: 'simple-console',
           migrationsRun: true,
           migrations: [__dirname + '/database/migrations/**/*.{ts,js}'],
