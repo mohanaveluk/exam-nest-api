@@ -4,9 +4,9 @@ import { Logger } from '@nestjs/common';
 const logger = new Logger('DatabaseUtil');
 
 export async function waitForDatabase(config: TypeOrmModuleOptions | any): Promise<void> {
-  const { host, port, username, password, databaase } = config;
+  const { host, port, username, password, database } = config;
   
-  logger.log(`Waiting for database connection at ${host}:${port} - ${username}, ${password}, ${databaase}...`);
+  logger.log(`Waiting for database connection at ${host}:${port} - ${username}, ${password}, ${database}...`);
   
   let retries = 0;
   const maxRetries = 30;
