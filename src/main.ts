@@ -4,8 +4,14 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
 import { corsConfig, CorsUtil } from './shared/utils/cors.util';
 import * as http from 'http';
+import { waitForDatabase } from './utils/database.util.js';
+import { getDatabaseConfig } from './config/database.config.js';
 
 async function bootstrap() {
+
+  // Wait for database to be available
+  await waitForDatabase(getDatabaseConfig());
+  
   const app = await NestFactory.create(AppModule);
   const server = app.getHttpServer() as http.Server;
   // Set global prefix for all routes
