@@ -54,9 +54,16 @@ ENV NODE_ENV=production
 # The port that Cloud Run will use
 ENV PORT=8080
 
+# Add wait-for-it script for database connection
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
 # Expose the port the app runs on
 EXPOSE 3000
 
 # Define the command to run the application
 #CMD ["node", "dist/main"]
-CMD ["npm", "run", "start:prod"]
+#CMD ["npm", "run", "start:prod"]
+
+# Start the application with database connection check
+CMD ["/wait-for-it.sh", "${DB_HOST}:${DB_PORT}", "--timeout=30", "--strict", "--", "npm", "run", "start:prod"]

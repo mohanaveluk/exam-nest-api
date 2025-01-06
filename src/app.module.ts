@@ -35,6 +35,8 @@ import { adminConfig, databaseConfig, googleCloudConfig, jwtConfig, smtpConfig }
           logger: 'simple-console',
           migrationsRun: true,
           migrations: [__dirname + '/database/migrations/**/*.{ts,js}'],
+          retryAttempts: 5,
+          retryDelay: 3000,
           connectTimeout: 60000, // 60 seconds
         }),
       }),
