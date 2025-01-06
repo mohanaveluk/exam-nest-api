@@ -1,9 +1,7 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { AppModule } from './app.module';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { JwtService } from '@nestjs/jwt';
+import { AppModule } from './app.module.js';
 import { corsConfig, CorsUtil } from './shared/utils/cors.util';
 import * as http from 'http';
 
