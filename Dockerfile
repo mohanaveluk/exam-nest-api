@@ -55,8 +55,8 @@ ENV NODE_ENV=production
 ENV PORT=8080
 
 # Add wait-for-it script for database connection
-COPY wait-for-it.sh /wait-for-it.sh
-RUN chmod +x /wait-for-it.sh
+#COPY wait-for-it.sh /wait-for-it.sh
+#RUN chmod +x /wait-for-it.sh
 
 # Add healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
