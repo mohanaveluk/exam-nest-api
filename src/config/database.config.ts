@@ -14,7 +14,7 @@ export const getDatabaseConfig = (configService?: ConfigService): TypeOrmModuleO
     port: configService?.get('database.port') || parseInt(process.env.DB_PORT, 10) || 3306,
     username: configService?.get('database.username') || process.env.DB_USERNAME || 'root',
     password: configService?.get('database.password') || process.env.DB_PASSWORD || 'root',
-    database: configService?.get('database.database') || process.env.DB_DATABASE || 'nurse_exam_db',
+    database: configService?.get('database.database') || process.env.DB_DATABASE || 'medprep_db',
     autoLoadEntities: true,
     entities: [join(__dirname, '..', '**', '*.entity.{ts,js}')],
     migrations: [join(__dirname, '..', 'database', 'migrations', '*{.ts,.js}')],
