@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "tsc",
+    "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -19,8 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm1": "typeorm-ts-node-commonjs",
-    "typeorm2": "node --loader ts-node/esm ./node_modules/typeorm/cli.js -d src/database/migrations/index.ts",
-    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/database/migrations/index.ts",
     "migration:generate1": "npm run typeorm -- migration:generate",
     "migration:run1": "npm run typeorm -- migration:run",
     "migration:revert1": "npm run typeorm -- migration:revert",

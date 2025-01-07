@@ -12,6 +12,13 @@ docker-compose down -v
 
 docker-compose up --build
 
+###run docker compose for dev
+docker-compose --profile dev up --build
+
+###run docker compose for prod
+docker-compose --profile prod up --build
+
+
 ###If you still get a port conflict error, you can:
 
 ###Check what's using port 3307:
