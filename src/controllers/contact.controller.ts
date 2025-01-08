@@ -15,9 +15,6 @@ export class ContactController {
   constructor(private readonly contactService: ContactService) {}
 
   @Post()
-  @ApiBearerAuth('JWT-auth')
-  @AllowRoles(UserRole.Admin, UserRole.User)
-  @UseGuards(JwtAuthGuard, AuthorizationGuard)
   @ApiOperation({ summary: 'Submit a contact form' })
   @ApiResponse({ status: 201, description: 'Contact form submitted successfully' })
   @ApiResponse({ status: 400, description: 'Bad request - validation error' })
