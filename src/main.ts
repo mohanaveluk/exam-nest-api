@@ -6,6 +6,7 @@ import { corsConfig, CorsUtil } from './shared/utils/cors.util';
 import * as http from 'http';
 import { waitForDatabase } from './utils/database.util.js';
 import { getDatabaseConfig } from './config/database.config.js';
+import * as cors from 'cors';
 
 async function bootstrap() {
 
@@ -16,13 +17,23 @@ async function bootstrap() {
   const server = app.getHttpServer() as http.Server;
   // Set global prefix for all routes
   app.setGlobalPrefix('api/v1');
-  
+
+  // Configure CORS
+  app.enableCors({
+    origin: true, // This allows requests from any origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  });
+
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   //app.useGlobalGuards(new JwtAuthGuard(app.get(JwtService), app.get(Reflector)));
   //app.useGlobalGuards(new JwtAuthGuard(app.get(Reflector)));
 
   // cors
-  app.enableCors(corsConfig); //CorsUtil()
+  //app.enableCors(corsConfig); //CorsUtil()
+
   
   // Set the timeout value for sockets (in milliseconds)
   server.setTimeout(120000); // 120 seconds
