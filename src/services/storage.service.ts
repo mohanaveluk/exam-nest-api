@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Storage } from '@google-cloud/storage';
 import { ConfigService } from '@nestjs/config';
+import { EncryptionService } from './encryption.service';
 
 @Injectable()
 export class StorageService {
@@ -9,13 +10,9 @@ export class StorageService {
   private bucket: string;
 
   constructor(private configService: ConfigService) {
-    this.storage = new Storage({
-      projectId: this.configService.get('GOOGLE_CLOUD_PROJECT_ID'),
-      credentials: {
-        client_email: this.configService.get('GOOGLE_CLOUD_CLIENT_EMAIL'),
-        private_key: this.configService.get('GOOGLE_CLOUD_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
-      },
-    });
+    
+
+
     this.storage1 = new Storage({
         keyFilename: './healthcare-apps-446704-4844b2491c96.json',
         projectId: "healthcare-apps-446704"
@@ -24,6 +21,30 @@ export class StorageService {
   }
 
   async uploadFile(file: Express.Multer.File): Promise<string> {
+    const encryptionService = new EncryptionService();
+
+    //const skey = encryptionService.generateSecureKey();
+
+    // Encrypt
+    //const pkey1 = this.configService.get('GOOGLE_CLOUD_PRIVATE_KEY1'); //?.replace(/\\n/g, '\n');
+    const pxkey = this.configService.get('GOOGLE_CLOUD_PRIVATE_KEYP');
+    const sxkey = this.configService.get('GOOGLE_CLOUD_PRIVATE_KEYS');
+    const pkey = `${pxkey}${this.configService.get('GOOGLE_CLOUD_PRIVATE_KEY')}${sxkey}`?.replace(/\\n/g, '\n');
+    //const encrypted = await encryptionService.encrypt(pkey1);
+    //const decrypted = await encryptionService.decrypt(encrypted);
+    ///const decrypted = await encryptionService.decrypt(pkey);
+    //const prkey = `-----BEGIN PRIVATE KEY-----\n${decrypted}\n-----END PRIVATE KEY-----\n`
+    //console.log(decrypted);
+
+    this.storage = new Storage({
+      projectId: this.configService.get('GOOGLE_CLOUD_PROJECT_ID'),
+      credentials: {
+        client_email: this.configService.get('GOOGLE_CLOUD_CLIENT_EMAIL'),
+        private_key: pkey,
+      },
+    });
+
+
     const bucket = this.storage.bucket(this.bucket);
     const blob = bucket.file(`user-profiles/${Date.now()}-${file.originalname}`);
     
