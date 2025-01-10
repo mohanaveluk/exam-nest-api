@@ -564,6 +564,4 @@ export class AuthService {
     }
 
   }
-
-  
 }
