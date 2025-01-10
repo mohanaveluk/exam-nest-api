@@ -9,23 +9,23 @@ export class StorageService {
   private bucket: string;
 
   constructor(private configService: ConfigService) {
-    this.storage1 = new Storage({
+    this.storage = new Storage({
       projectId: this.configService.get('GOOGLE_CLOUD_PROJECT_ID'),
       credentials: {
         client_email: this.configService.get('GOOGLE_CLOUD_CLIENT_EMAIL'),
         private_key: this.configService.get('GOOGLE_CLOUD_PRIVATE_KEY')?.replace(/\\n/g, '\n'),
       },
     });
-    this.storage = new Storage({
-        keyFilename: './api-node-docker-d8462fdb3f6d.json',
-        projectId: "thematic-fort-313314"
+    this.storage1 = new Storage({
+        keyFilename: './healthcare-apps-446704-4844b2491c96.json',
+        projectId: "healthcare-apps-446704"
     });
     this.bucket = this.configService.get('GOOGLE_CLOUD_BUCKET');
   }
 
   async uploadFile(file: Express.Multer.File): Promise<string> {
     const bucket = this.storage.bucket(this.bucket);
-    const blob = bucket.file(`profiles/${Date.now()}-${file.originalname}`);
+    const blob = bucket.file(`user-profiles/${Date.now()}-${file.originalname}`);
     
     const stream = blob.createWriteStream({
       metadata: {
@@ -34,7 +34,7 @@ export class StorageService {
       resumable: false,
     });
 
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       stream.on('error', (err) => {
         reject(err);
       });
