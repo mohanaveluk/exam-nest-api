@@ -7,3 +7,7 @@ jspm_packages/
 .nuxt
 dist
 logs
+
+# Environment files
+.env
+.env.*
