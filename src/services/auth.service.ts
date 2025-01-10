@@ -51,12 +51,16 @@ export class AuthService {
     try {
 
       const existingUser = await this.userRepository.findOne({
-        where: { email: registerDto.email },
+        where: { email: registerDto.email, isEmailVerified: true },
       });
 
       if (existingUser) {
         throw new BadRequestException('Email already exist');
       }
+
+      const unverifiedUser = await this.userRepository.findOne({
+        where: { email: registerDto.email, isEmailVerified: false },
+      });
 
       let role = await this.rolesRepository.findOne({ where: { rguid: registerDto.role_id } });
       if (!role) {
@@ -70,7 +74,18 @@ export class AuthService {
       const verificationCode = this.generateOTC();
       const verificationCodeExpiry = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-      const user = this.userRepository.create({
+      if(unverifiedUser){
+        // Update user properties
+        Object.assign(unverifiedUser, registerDto);
+        unverifiedUser.password = hashedPassword;
+        unverifiedUser.updated_at = new Date();
+        unverifiedUser.verificationCode = verificationCode;
+        unverifiedUser.verificationCodeExpiry = verificationCodeExpiry;
+        unverifiedUser.isEmailVerified = false;
+        unverifiedUser.is_active = 0;
+      }
+
+      const user = unverifiedUser ? unverifiedUser : (this.userRepository.create({
         ...registerDto,
         password: hashedPassword,
         uguid: uuidv4(),
@@ -79,8 +94,9 @@ export class AuthService {
         created_at: new Date(await this.dateService.getCurrentDateTime()),
         verificationCode,
         verificationCodeExpiry,
-        isEmailVerified: false
-      });
+        isEmailVerified: false,
+        is_active: 0
+      }));
 
       const savedUser = await this.userRepository.save(user);
       const tokens = await this.tokenService.generateTokens(savedUser);
@@ -159,6 +175,7 @@ export class AuthService {
     user.isEmailVerified = true;
     user.verificationCode = null;
     user.verificationCodeExpiry = null;
+    user.is_active = 1;
     await this.userRepository.save(user);
 
     return { message: 'Email verified successfully' };
