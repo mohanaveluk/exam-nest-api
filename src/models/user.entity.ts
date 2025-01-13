@@ -61,6 +61,12 @@ export class User {
   @Column({ nullable: true })
   profileImage: string;
 
+  @Column({ default: false, name: 'is_deleted' })
+  isDeleted: boolean;
+
+  @Column({ nullable: true })
+  lastLogin: Date;
+
   @OneToMany(() => PasswordArchive, passwordArchive => passwordArchive.user)
   password_history: PasswordArchive[];
 

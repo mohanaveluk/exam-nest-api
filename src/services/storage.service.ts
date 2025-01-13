@@ -21,7 +21,7 @@ export class StorageService {
   }
 
   async uploadFile(file: Express.Multer.File): Promise<string> {
-    const encryptionService = new EncryptionService();
+    //const encryptionService = new EncryptionService();
 
     //const skey = encryptionService.generateSecureKey();
 
