@@ -565,8 +565,8 @@ export class AuthService {
     }
 
   }
-
   
+  //  user related apis
   async findAllRoles(): Promise<RoleEntity[]> {
     try {
       const roles = await this.rolesRepository.find({
@@ -650,6 +650,5 @@ export class AuthService {
       throw new InternalServerErrorException('Failed to update user status');
     }
   }
-
 
 }
