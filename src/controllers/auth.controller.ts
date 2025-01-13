@@ -12,7 +12,9 @@ import {
   Put,
   Get,
   HttpException,
-  HttpStatus
+  HttpStatus,
+  Patch,
+  Param
 } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { RegisterDto } from '../dto/auth/register.dto';
@@ -35,6 +37,9 @@ import { ResendOTCDto } from 'src/dto/auth/resend-otc.dto';
 import { Permission } from 'src/models/auth/permission.entity';
 import { UserResponseDto } from 'src/dto/auth/user-response.dto';
 import { GenericApiResponse } from 'src/dto/common/generic-api-response.dto';
+import { User } from 'src/models/user.entity';
+import { ToggleUserStatusDto } from 'src/dto/auth/toggle-user-status.dto';
+import { UpdateUserDto } from 'src/dto/auth/update-user.dto';
 
 
 @ApiTags('Authentication')
@@ -258,5 +263,93 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Bad request - invalid or expired token' })
   async getUserPermissions(@Request() req): Promise<Permission[]> {
     return this.authService.getUserPermissions(req.user.uguid);
+  }
+
+
+  @Get("roles")
+  @ApiOperation({ summary: 'Get all roles' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Returns all roles',
+    type: [User]
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized' 
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error' 
+  })
+  async getRoles() {
+    return this.authService.findAllRoles();
+  }
+
+  
+  @Get("users")
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Returns all users',
+    type: [User]
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized' 
+  })
+  @ApiResponse({ 
+    status: 500, 
+    description: 'Internal server error' 
+  })
+  async getUsers() {
+    return this.authService.findAllUsers();
+  }
+
+  @Put(':uguid')
+  @ApiOperation({ summary: 'Update user details' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User updated successfully',
+    type: User
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid input' 
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found' 
+  })
+  async updateUser(
+    @Param('uguid') uguid: string,
+    @Body() updateUserDto: UpdateUserDto
+  ) {
+    return this.authService.updateUser(uguid, updateUserDto);
+  }
+
+  @Patch(':uguid/status')
+  @ApiOperation({ summary: 'Toggle user active status' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User status updated successfully',
+    type: User
+  })
+  @ApiResponse({ 
+    status: 401, 
+    description: 'Unauthorized' 
+  })
+  @ApiResponse({ 
+    status: 404, 
+    description: 'User not found' 
+  })
+  async toggleUserStatus(
+    @Param('uguid') uguid: string,
+    @Body() toggleStatusDto: ToggleUserStatusDto
+  ) {
+    return this.authService.toggleStatus(uguid, toggleStatusDto.isActive);
   }
 }

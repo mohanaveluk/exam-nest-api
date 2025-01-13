@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -27,6 +27,7 @@ import { CommonService } from './common.service';
 import { ResendOTCDto } from 'src/dto/auth/resend-otc.dto';
 import { Permission } from 'src/models/auth/permission.entity';
 import { UserResponseDto } from 'src/dto/auth/user-response.dto';
+import { UpdateUserDto } from 'src/dto/auth/update-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -566,4 +567,89 @@ export class AuthService {
   }
 
   
+  async findAllRoles(): Promise<RoleEntity[]> {
+    try {
+      const roles = await this.rolesRepository.find({
+        order: { name: 'ASC' }
+      });
+      return roles;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch users');
+    }
+  }
+
+  async findAllUsers(): Promise<User[]> {
+    try {
+      const users = await this.userRepository.find({
+        where: { isDeleted: false },
+        order: { created_at: 'DESC' },
+        relations: ['role']
+      });
+      return users;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to fetch users');
+    }
+  }
+  
+
+  async updateUser(uguid: string, updateUserDto: UpdateUserDto): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { uguid, isDeleted: false },
+        relations: ['role']
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${uguid} not found`);
+      }
+
+      const role = await this.rolesRepository.findOne({
+        where: {rguid: updateUserDto.roleGuid}
+      });
+
+      // Validate email uniqueness if email is being updated
+      if (updateUserDto.email && updateUserDto.email !== user.email) {
+        const existingUser = await this.userRepository.findOne({
+          where: { email: updateUserDto.email, isDeleted: false }
+        });
+        if (existingUser) {
+          throw new BadRequestException('Email already exists');
+        }
+      }
+
+      Object.assign(user, updateUserDto);
+      user.role = role;
+      user.role_id = role?.id || 1;
+      return await this.userRepository.save(user);
+    } catch (error) {
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update user');
+    }
+  }
+
+  async toggleStatus(uguid: string, isActive: boolean): Promise<User> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { uguid, isDeleted: false },
+        relations: ['role']
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${uguid} not found`);
+      }
+
+      user.is_active = isActive ? 1 : 0;
+      user.updated_at = new Date();
+      return await this.userRepository.save(user);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update user status');
+    }
+  }
+
+
 }
