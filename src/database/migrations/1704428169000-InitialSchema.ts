@@ -90,6 +90,8 @@ export class initSchema1704428169000 implements MigrationInterface {
         \`uguid\` varchar(255) NOT NULL,
         \`role_id\` int NULL,
         \`profileImage\` varchar(255) NULL,
+        \`is_deleted\` tinyint NOT NULL DEFAULT 0,
+        \`lastLogin\` datetime DEFAULT NULL,
         UNIQUE INDEX \`IDX_e12875dfb3b1d92d7d7c5377e2\` (\`email\`),
         PRIMARY KEY (\`id\`)
     )`);	
