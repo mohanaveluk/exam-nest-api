@@ -14,7 +14,8 @@ import {
   HttpException,
   HttpStatus,
   Patch,
-  Param
+  Param,
+  Req
 } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { RegisterDto } from '../dto/auth/register.dto';
@@ -40,7 +41,7 @@ import { GenericApiResponse } from 'src/dto/common/generic-api-response.dto';
 import { User } from 'src/models/user.entity';
 import { ToggleUserStatusDto } from 'src/dto/auth/toggle-user-status.dto';
 import { UpdateUserDto } from 'src/dto/auth/update-user.dto';
-
+import { Request as ExpRequest } from 'express';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -139,8 +140,8 @@ export class AuthController {
     description: Constants.SWAGGER.INTERNAL_SERVER_ERROR,
     type: ApiErrorDto,
   })
-  async login(@Body() loginDto: LoginDto) {
-    return await this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req: ExpRequest) {
+    return await this.authService.login(loginDto, req);
   }
 
 
@@ -195,7 +196,7 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Logout successful' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   logout(@Request() req) {
-    return this.authService.logout(req.user.id);
+    return this.authService.logout(req.user.id, req.user.uguid);
   }
   
 

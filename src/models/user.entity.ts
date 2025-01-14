@@ -6,6 +6,7 @@ import { InquiryResponse } from './inquiry/inquiry-response.entity';
 import { FollowUp } from './inquiry/follow-up.entity';
 import { RefreshToken } from './user/refresh-token.entity';
 import { Group } from './auth/group.entity';
+import { UserLoginHistory } from './auth/user-login-history.entity';
 
 @Entity('user')
 export class User {
@@ -81,6 +82,9 @@ export class User {
 
   @OneToMany(() => RefreshToken, refreshToken => refreshToken.user)
   refreshTokens: RefreshToken[];
+
+  @OneToMany(() => UserLoginHistory, userLoginHistory => userLoginHistory.user)
+  loginHistory: UserLoginHistory[];
 
   @ManyToMany(() => Group)
   @JoinTable({
