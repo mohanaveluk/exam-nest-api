@@ -25,11 +25,13 @@ import { UserGroupsService } from 'src/services/user-groups.service';
 import { UsersService } from 'src/services/users.service';
 import { Permission } from 'src/models/auth/permission.entity';
 import { Group } from 'src/models/auth/group.entity';
+import { UserLoginHistory } from 'src/models/auth/user-login-history.entity';
+import { UserLoginHistoryService } from 'src/services/auth/user-login-history.service';
 dotenv.config();
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RefreshToken, PasswordArchive, RoleEntity, OTC, Group, Permission]),
+    TypeOrmModule.forFeature([User, RefreshToken, PasswordArchive, RoleEntity, OTC, Group, Permission, UserLoginHistory]),
     PassportModule.register({ defaultStrategy: 'jwt' ,
       session: false}),
     
@@ -68,7 +70,8 @@ dotenv.config();
     EmailService,
     CommonService,
     UserGroupsService,
-    UsersService
+    UsersService,
+    UserLoginHistoryService
     // {
     //   provide: APP_GUARD,
     //   useClass: JwtAuthGuard,
@@ -81,6 +84,6 @@ dotenv.config();
       inject: [Reflector, JwtService]
     }*/
   ],
-  exports: [AuthService,  PassportModule, DateService, TokenService, StorageService],
+  exports: [AuthService,  PassportModule, DateService, TokenService, StorageService, UserLoginHistoryService],
 })
 export class AuthModule { }

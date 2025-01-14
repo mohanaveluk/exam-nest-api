@@ -28,6 +28,9 @@ import { ResendOTCDto } from 'src/dto/auth/resend-otc.dto';
 import { Permission } from 'src/models/auth/permission.entity';
 import { UserResponseDto } from 'src/dto/auth/user-response.dto';
 import { UpdateUserDto } from 'src/dto/auth/update-user.dto';
+import { UserLoginHistoryService } from './auth/user-login-history.service';
+import { Request } from 'express';
+
 
 @Injectable()
 export class AuthService {
@@ -46,6 +49,7 @@ export class AuthService {
     private storageService: StorageService,
     private emailService: EmailService,
     private commonService: CommonService,
+    private userLoginHistoryService: UserLoginHistoryService
   ) {}
 
   async register(registerDto: RegisterDto) {
@@ -203,7 +207,7 @@ export class AuthService {
     return userResponses;
   }
   
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, req: Request) {
     const user = await this.userRepository.findOne({
       where: { email: loginDto.email },
     });
@@ -238,6 +242,18 @@ export class AuthService {
       throw new UnauthorizedException('Oops, Password is incorrect.');
     }
 
+    // Record login
+    const loginTime = new Date();
+    await this.userLoginHistoryService.recordLogin(
+      user.id,
+      user.uguid,
+      loginTime,
+      req.ip,
+      req.headers['user-agent']
+    );
+
+    user.lastLogin = loginTime;
+    this.userRepository.save(user);
     /*const payload = { 
       sub: user.uguid, 
       email: user.email,
@@ -307,8 +323,9 @@ export class AuthService {
     return user;
   }
 
-  async logout(userId: number) {
+  async logout(userId: number, uguid: string) {
     await this.tokenService.revokeAllUserRefreshTokens(userId);
+    await this.userLoginHistoryService.recordLogout(uguid);
     return { message: 'Logged out successfully' };
   }
 
