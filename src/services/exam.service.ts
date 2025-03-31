@@ -575,7 +575,7 @@ export class ExamService {
     }
 
     const pauseDuration = Date.now() - session.pausedAt.getTime();
-    session.totalPausedTime += pauseDuration;
+    session.totalPausedTime += Math.floor(pauseDuration / (1000));
     session.endTime = new Date(session.endTime.getTime() + pauseDuration);
     session.status = 'active';
     session.pausedAt = null;
