@@ -96,6 +96,7 @@ export class initSchema1704428169000 implements MigrationInterface {
         PRIMARY KEY (\`id\`)
     )`);	
     
+
     await queryRunner.query(`CREATE TABLE \`otc_tbl\` (
         \`id\` int NOT NULL AUTO_INCREMENT,
         \`uguid\` varchar(255) NULL,
@@ -283,6 +284,20 @@ export class initSchema1704428169000 implements MigrationInterface {
         PRIMARY KEY (\`group_id\`, \`user_id\`)
     )`);	
 
+    await queryRunner.query(`CREATE TABLE \`user_login_history\` (
+        \`id\` int NOT NULL AUTO_INCREMENT,
+        \`userGuid\` varchar(255) NOT NULL,
+        \`loginTime\` timestamp NOT NULL,
+        \`logoutTime\` timestamp NULL DEFAULT NULL,
+        \`ipAddress\` varchar(50) NOT NULL,
+        \`userAgent\` varchar(255) DEFAULT NULL,
+        \`deviceType\` enum('desktop','mobile','tablet') NOT NULL DEFAULT 'desktop',
+        \`createdAt\` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+        \`userId\` int NOT NULL,
+        PRIMARY KEY (\`id\`),
+        KEY \`FK_8cd045e34dacf6e82ac34e783b5\` (\`userId\`)
+    )`);	
+
     await queryRunner.query(`ALTER TABLE \`password_archive_tbl\` 
         ADD CONSTRAINT \`FK_1f647e94f0ec9a96514824387ef\` 
         FOREIGN KEY (\`userId\`) REFERENCES \`user\`(\`id\`) 
@@ -439,6 +454,11 @@ export class initSchema1704428169000 implements MigrationInterface {
         ON DELETE CASCADE 
         ON UPDATE CASCADE`);
 
+        await queryRunner.query(`ALTER TABLE \`user_login_history\` 
+        ADD CONSTRAINT \`FK_8cd045e34dacf6e82ac34e783b5\` 
+        FOREIGN KEY (\`userId\`) REFERENCES \`user\` (\`id\`)
+        ON DELETE CASCADE 
+        ON UPDATE CASCADE`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
